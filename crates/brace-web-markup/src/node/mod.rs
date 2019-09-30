@@ -1,9 +1,12 @@
+use std::collections::VecDeque;
+
 use self::element::Element;
 use self::text::Text;
 
 pub mod element;
 pub mod text;
 
+#[derive(Clone)]
 pub enum Node {
     Text(Text),
     Element(Element),
@@ -76,6 +79,111 @@ impl From<Text> for Node {
 impl From<Element> for Node {
     fn from(from: Element) -> Self {
         Self::Element(from)
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct Nodes {
+    inner: VecDeque<Node>,
+}
+
+impl Nodes {
+    pub fn new() -> Self {
+        Self {
+            inner: VecDeque::new(),
+        }
+    }
+
+    pub fn get(&self, index: usize) -> Option<&Node> {
+        self.inner.get(index)
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut Node> {
+        self.inner.get_mut(index)
+    }
+
+    pub fn append<T>(&mut self, node: T) -> &mut Self
+    where
+        T: Into<Node>,
+    {
+        self.inner.push_back(node.into());
+        self
+    }
+
+    pub fn prepend<T>(&mut self, node: T) -> &mut Self
+    where
+        T: Into<Node>,
+    {
+        self.inner.push_front(node.into());
+        self
+    }
+
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+impl From<()> for Nodes {
+    fn from(_: ()) -> Self {
+        Self::default()
+    }
+}
+
+impl From<&str> for Nodes {
+    fn from(from: &str) -> Self {
+        Self {
+            inner: vec![Node::text(from)].into(),
+        }
+    }
+}
+
+impl From<String> for Nodes {
+    fn from(from: String) -> Self {
+        Self {
+            inner: vec![Node::text(from)].into(),
+        }
+    }
+}
+
+impl From<Text> for Nodes {
+    fn from(from: Text) -> Self {
+        Self {
+            inner: vec![Node::from(from)].into(),
+        }
+    }
+}
+
+impl From<Element> for Nodes {
+    fn from(from: Element) -> Self {
+        Self {
+            inner: vec![Node::from(from)].into(),
+        }
+    }
+}
+
+impl From<Node> for Nodes {
+    fn from(from: Node) -> Self {
+        Self {
+            inner: vec![from].into(),
+        }
+    }
+}
+
+impl From<&[Node]> for Nodes {
+    fn from(from: &[Node]) -> Self {
+        Self {
+            inner: from.to_vec().into(),
+        }
+    }
+}
+
+impl From<Vec<Node>> for Nodes {
+    fn from(from: Vec<Node>) -> Self {
+        Self { inner: from.into() }
     }
 }
 

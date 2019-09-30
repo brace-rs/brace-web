@@ -14,13 +14,13 @@ mod tests {
         let mut body = Element::new("body");
         let text = Text::new("Hello world");
 
-        body.nodes.push(Node::Text(text));
+        body.nodes_mut().append(Node::Text(text));
 
-        assert_eq!(body.nodes.len(), 1);
+        assert_eq!(body.nodes().len(), 1);
 
-        html.nodes.push(Node::Element(body));
+        html.nodes_mut().append(Node::Element(body));
 
-        assert_eq!(html.nodes.len(), 1);
+        assert_eq!(html.nodes().len(), 1);
     }
 
     #[test]
@@ -29,12 +29,12 @@ mod tests {
         let mut body = Node::element("body");
         let text = Node::text("hello world");
 
-        body.as_element_mut().unwrap().nodes.push(text);
+        body.as_element_mut().unwrap().nodes_mut().append(text);
 
-        assert_eq!(body.as_element_mut().unwrap().nodes.len(), 1);
+        assert_eq!(body.as_element_mut().unwrap().nodes().len(), 1);
 
-        html.as_element_mut().unwrap().nodes.push(body);
+        html.as_element_mut().unwrap().nodes_mut().append(body);
 
-        assert_eq!(html.as_element_mut().unwrap().nodes.len(), 1);
+        assert_eq!(html.as_element_mut().unwrap().nodes().len(), 1);
     }
 }

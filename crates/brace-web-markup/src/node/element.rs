@@ -1,8 +1,9 @@
-use crate::node::Node;
+use super::Nodes;
 
+#[derive(Clone)]
 pub struct Element {
     pub tag: String,
-    pub nodes: Vec<Node>,
+    nodes: Nodes,
 }
 
 impl Element {
@@ -12,8 +13,16 @@ impl Element {
     {
         Self {
             tag: tag.into(),
-            nodes: Vec::new(),
+            nodes: Nodes::new(),
         }
+    }
+
+    pub fn nodes(&self) -> &Nodes {
+        &self.nodes
+    }
+
+    pub fn nodes_mut(&mut self) -> &mut Nodes {
+        &mut self.nodes
     }
 }
 
@@ -21,7 +30,7 @@ impl From<&str> for Element {
     fn from(from: &str) -> Self {
         Self {
             tag: from.to_owned(),
-            nodes: Vec::new(),
+            nodes: Nodes::new(),
         }
     }
 }
@@ -30,7 +39,7 @@ impl From<String> for Element {
     fn from(from: String) -> Self {
         Self {
             tag: from,
-            nodes: Vec::new(),
+            nodes: Nodes::new(),
         }
     }
 }
