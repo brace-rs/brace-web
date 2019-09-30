@@ -1,3 +1,10 @@
+pub fn text<T>(text: T) -> Text
+where
+    T: Into<String>,
+{
+    Text::new(text)
+}
+
 #[derive(Clone)]
 pub struct Text {
     pub value: String,

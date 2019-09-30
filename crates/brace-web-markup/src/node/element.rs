@@ -1,5 +1,13 @@
 use super::Nodes;
 
+pub fn element<T, U>(tag: T, nodes: U) -> Element
+where
+    T: Into<String>,
+    U: Into<Nodes>,
+{
+    Element::with(tag, nodes)
+}
+
 #[derive(Clone)]
 pub struct Element {
     pub tag: String,
