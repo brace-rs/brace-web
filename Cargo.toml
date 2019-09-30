@@ -1,4 +1,5 @@
 [workspace]
 members = [
   "crates/brace-web",
+  "crates/brace-web-markup",
 ]
