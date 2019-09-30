@@ -17,6 +17,17 @@ impl Element {
         }
     }
 
+    pub fn with<T, U>(tag: T, nodes: U) -> Self
+    where
+        T: Into<String>,
+        U: Into<Nodes>,
+    {
+        Self {
+            tag: tag.into(),
+            nodes: nodes.into(),
+        }
+    }
+
     pub fn nodes(&self) -> &Nodes {
         &self.nodes
     }

@@ -37,4 +37,20 @@ mod tests {
 
         assert_eq!(html.as_element_mut().unwrap().nodes().len(), 1);
     }
+
+    #[test]
+    fn test_node_tree_nested() {
+        let html: Node =
+            Element::with("html", Element::with("body", Text::new("hello world"))).into();
+
+        assert_eq!(html.as_element().unwrap().nodes().len(), 1);
+
+        let body = html.as_element().unwrap().nodes().get(0).unwrap();
+
+        assert_eq!(body.as_element().unwrap().nodes().len(), 1);
+
+        let text = body.as_element().unwrap().nodes().get(0).unwrap();
+
+        assert_eq!(text.as_text().unwrap().value, "hello world");
+    }
 }
