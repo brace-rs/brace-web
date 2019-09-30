@@ -1,0 +1,8 @@
+[package]
+name = "brace-web"
+version = "0.1.0"
+authors = ["Daniel Balcomb <daniel.balcomb@gmail.com>"]
+description = "A web application framework."
+repository = "https://github.com/brace-rs/brace-web"
+license = "MIT OR Apache-2.0"
+edition = "2018"
