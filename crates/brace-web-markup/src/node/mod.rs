@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::vec_deque::{IntoIter, Iter, IterMut, VecDeque};
 
 use self::element::Element;
 use self::text::Text;
@@ -125,6 +125,41 @@ impl Nodes {
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub fn iter(&self) -> Iter<'_, Node> {
+        self.inner.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<'_, Node> {
+        self.inner.iter_mut()
+    }
+}
+
+impl IntoIterator for Nodes {
+    type Item = Node;
+    type IntoIter = IntoIter<Node>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.inner.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Nodes {
+    type Item = &'a Node;
+    type IntoIter = Iter<'a, Node>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Nodes {
+    type Item = &'a mut Node;
+    type IntoIter = IterMut<'a, Node>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
 }
 
 impl From<()> for Nodes {
@@ -189,6 +224,7 @@ impl From<Vec<Node>> for Nodes {
 
 #[cfg(test)]
 mod tests {
+    use super::Nodes;
     use crate::{Element, Node, Text};
 
     #[test]
@@ -216,5 +252,31 @@ mod tests {
         assert!(node_4.is_element());
         assert!(node_4.as_element().is_some());
         assert!(node_4.as_element_mut().is_some());
+    }
+
+    #[test]
+    fn test_node_iter() {
+        let mut nodes = Nodes::new();
+
+        nodes.append(Node::text("hello"));
+        nodes.append(Node::text("world"));
+
+        assert!(!nodes.is_empty());
+        assert_eq!(nodes.len(), 2);
+
+        for node in &nodes {
+            assert!(node.is_text());
+        }
+
+        for node in &mut nodes {
+            assert!(node.is_text());
+
+            node.as_text_mut().unwrap().value = "goodbye".to_owned();
+        }
+
+        for node in nodes {
+            assert!(node.is_text());
+            assert_eq!(node.as_text().unwrap().value, "goodbye");
+        }
     }
 }
