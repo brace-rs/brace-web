@@ -112,7 +112,17 @@ impl Nodes {
     where
         T: Into<Node>,
     {
-        self.0.push_back(node.into());
+        let node = node.into();
+
+        if let Node::Text(text) = &node {
+            if let Some(item) = self.0.back_mut().and_then(|item| item.as_text_mut()) {
+                item.value_mut().push_str(text.value());
+
+                return self;
+            }
+        }
+
+        self.0.push_back(node);
         self
     }
 
@@ -120,7 +130,19 @@ impl Nodes {
     where
         T: Into<Node>,
     {
-        self.0.push_front(node.into());
+        let mut node = node.into();
+
+        if let Node::Text(text) = &mut node {
+            if let Some(item) = self.0.front_mut().and_then(|item| item.as_text_mut()) {
+                text.value_mut().push_str(item.value());
+
+                *item.value_mut() = text.value().to_string();
+
+                return self;
+            }
+        }
+
+        self.0.push_front(node);
         self
     }
 
@@ -269,26 +291,33 @@ mod tests {
     fn test_node_iter() {
         let mut nodes = Nodes::new();
 
-        nodes.append(Node::text("hello"));
-        nodes.append(Node::text("world"));
+        nodes.append(Node::element("div"));
+        nodes.append(Node::element("span"));
 
         assert!(!nodes.is_empty());
         assert_eq!(nodes.len(), 2);
 
+        let mut num = 0;
+
         for node in &nodes {
-            assert!(node.is_text());
+            assert!(node.is_element());
+
+            num += 1;
         }
 
         for node in &mut nodes {
-            assert!(node.is_text());
+            assert!(node.is_element());
 
-            *node.as_text_mut().unwrap().value_mut() = "goodbye".to_owned();
+            num += 1;
         }
 
         for node in nodes {
-            assert!(node.is_text());
-            assert_eq!(node.as_text().unwrap().value(), "goodbye");
+            assert!(node.is_element());
+
+            num += 1;
         }
+
+        assert_eq!(num, 6);
     }
 
     #[test]
@@ -339,5 +368,30 @@ mod tests {
         let text = body.as_element().unwrap().nodes().get(0).unwrap();
 
         assert_eq!(text.as_text().unwrap().value(), "hello world");
+    }
+
+    #[test]
+    fn test_insert_text() {
+        let mut element_1 = Element::new("span");
+
+        element_1.nodes_mut().append(Text::new("one"));
+        element_1.nodes_mut().append(Text::new("two"));
+
+        assert_eq!(element_1.nodes().len(), 1);
+        assert_eq!(
+            element_1.nodes().get(0).unwrap().as_text().unwrap().value(),
+            "onetwo"
+        );
+
+        let mut element_2 = Element::new("span");
+
+        element_2.nodes_mut().append(Text::new("one"));
+        element_2.nodes_mut().prepend(Text::new("two"));
+
+        assert_eq!(element_2.nodes().len(), 1);
+        assert_eq!(
+            element_2.nodes().get(0).unwrap().as_text().unwrap().value(),
+            "twoone"
+        );
     }
 }
