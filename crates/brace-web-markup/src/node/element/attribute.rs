@@ -1,6 +1,8 @@
 use indexmap::map::{IndexMap, IntoIter, Iter, IterMut};
 
-use crate::node::Nodes;
+use crate::node::element::Element;
+use crate::node::text::Text;
+use crate::node::{Node, Nodes};
 
 #[derive(Clone)]
 pub enum Attr {
@@ -110,6 +112,48 @@ impl From<String> for Attr {
 impl From<bool> for Attr {
     fn from(from: bool) -> Self {
         Self::Boolean(from)
+    }
+}
+
+impl From<Text> for Attr {
+    fn from(from: Text) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Vec<Text>> for Attr {
+    fn from(from: Vec<Text>) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Element> for Attr {
+    fn from(from: Element) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Vec<Element>> for Attr {
+    fn from(from: Vec<Element>) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Node> for Attr {
+    fn from(from: Node) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Vec<Node>> for Attr {
+    fn from(from: Vec<Node>) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Nodes> for Attr {
+    fn from(from: Nodes) -> Self {
+        Self::Nodes(from)
     }
 }
 

@@ -85,6 +85,38 @@ impl Element {
             .as_nodes_mut()
             .unwrap()
     }
+
+    pub fn get<K>(&self, key: K) -> Option<&Attr>
+    where
+        K: AsRef<str>,
+    {
+        self.0.get(key.as_ref())
+    }
+
+    pub fn get_mut<K>(&mut self, key: K) -> Option<&mut Attr>
+    where
+        K: AsRef<str>,
+    {
+        self.0.get_mut(key.as_ref())
+    }
+
+    pub fn set<K, V>(&mut self, key: K, val: V) -> &mut Self
+    where
+        K: Into<String>,
+        V: Into<Attr>,
+    {
+        self.0.insert(key, val);
+        self
+    }
+
+    pub fn attr<K, V>(mut self, key: K, val: V) -> Self
+    where
+        K: Into<String>,
+        V: Into<Attr>,
+    {
+        self.0.insert(key, val);
+        self
+    }
 }
 
 impl Render for Element {
@@ -131,7 +163,7 @@ impl From<String> for Element {
 
 #[cfg(test)]
 mod tests {
-    use super::Element;
+    use crate::{Element, Text};
 
     #[test]
     fn test_element_attribute_string() {
@@ -177,5 +209,46 @@ mod tests {
                 .unwrap(),
             false
         );
+    }
+
+    #[test]
+    fn test_element_impl() {
+        let element = Element::new("div")
+            .attr("id", "test")
+            .attr("class", "testing")
+            .attr(
+                "nodes",
+                vec![
+                    Element::new("span")
+                        .attr("class", "one")
+                        .attr("nodes", Text::new("one")),
+                    Element::new("span")
+                        .attr("class", "two")
+                        .attr("nodes", Text::new("two")),
+                ],
+            );
+
+        assert_eq!(element.nodes().len(), 2);
+        assert_eq!(element.tag(), "div");
+        assert_eq!(element.get("tag").unwrap().as_string().unwrap(), "div");
+        assert_eq!(element.get("id").unwrap().as_string().unwrap(), "test");
+        assert_eq!(
+            element.get("class").unwrap().as_string().unwrap(),
+            "testing"
+        );
+
+        let node_1 = element.nodes().get(0).unwrap().as_element().unwrap();
+
+        assert_eq!(node_1.nodes().len(), 1);
+        assert_eq!(node_1.tag(), "span");
+        assert_eq!(node_1.get("tag").unwrap().as_string().unwrap(), "span");
+        assert_eq!(node_1.get("class").unwrap().as_string().unwrap(), "one");
+
+        let node_2 = element.nodes().get(1).unwrap().as_element().unwrap();
+
+        assert_eq!(node_2.nodes().len(), 1);
+        assert_eq!(node_2.tag(), "span");
+        assert_eq!(node_2.get("tag").unwrap().as_string().unwrap(), "span");
+        assert_eq!(node_2.get("class").unwrap().as_string().unwrap(), "two");
     }
 }
