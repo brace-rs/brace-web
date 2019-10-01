@@ -6,3 +6,6 @@ description = "A web application markup templating engine."
 repository = "https://github.com/brace-rs/brace-web"
 license = "MIT OR Apache-2.0"
 edition = "2018"
+
+[dependencies]
+indexmap = "1.2"
