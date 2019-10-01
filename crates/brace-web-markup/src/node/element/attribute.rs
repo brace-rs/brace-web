@@ -97,7 +97,7 @@ impl Attr {
         }
     }
 
-    pub fn none() -> Self {
+    pub const fn none() -> Self {
         Self::None
     }
 
