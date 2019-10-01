@@ -1,6 +1,9 @@
+use std::fmt::Write;
+
 use indexmap::map::{IndexMap, IntoIter, Iter, IterMut};
 
 use super::Nodes;
+use crate::render::{Render, Renderer, Result as RenderResult};
 
 pub fn element<T, A, N>(tag: T, attrs: A, nodes: N) -> Element
 where
@@ -61,6 +64,26 @@ impl Element {
 
     pub fn nodes_mut(&mut self) -> &mut Nodes {
         &mut self.nodes
+    }
+}
+
+impl Render for Element {
+    fn render(&self, renderer: &mut Renderer) -> RenderResult {
+        write!(renderer, "<{}", self.tag)?;
+
+        for (key, val) in &self.attrs {
+            write!(renderer, " {}=\"{}\"", key, val)?;
+        }
+
+        write!(renderer, ">")?;
+
+        for node in &self.nodes {
+            node.render(renderer)?;
+        }
+
+        write!(renderer, "</{}>", self.tag)?;
+
+        Ok(())
     }
 }
 
