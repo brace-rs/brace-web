@@ -212,6 +212,18 @@ mod tests {
     }
 
     #[test]
+    fn test_element_attribute_none() {
+        let mut element_1 = Element::new("div");
+        let mut element_2 = Element::with("div", (), ());
+
+        element_1.attrs_mut().insert("attr", ());
+        element_2.attrs_mut().insert("attr", ());
+
+        assert!(element_1.attrs().get("attr").unwrap().is_none());
+        assert!(element_2.attrs().get("attr").unwrap().is_none());
+    }
+
+    #[test]
     fn test_element_impl() {
         let element = Element::new("div")
             .attr("id", "test")
