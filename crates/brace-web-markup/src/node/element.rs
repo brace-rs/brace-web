@@ -13,7 +13,7 @@ where
 
 #[derive(Clone)]
 pub struct Element {
-    pub tag: String,
+    tag: String,
     attrs: Attrs,
     nodes: Nodes,
 }
@@ -41,6 +41,10 @@ impl Element {
             attrs: attrs.into(),
             nodes: nodes.into(),
         }
+    }
+
+    pub fn tag(&self) -> &str {
+        &self.tag
     }
 
     pub fn attrs(&self) -> &Attrs {
