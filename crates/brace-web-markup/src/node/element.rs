@@ -1,4 +1,4 @@
-use std::collections::hash_map::{HashMap, IntoIter, Iter, IterMut};
+use indexmap::map::{IndexMap, IntoIter, Iter, IterMut};
 
 use super::Nodes;
 
@@ -85,11 +85,11 @@ impl From<String> for Element {
 }
 
 #[derive(Clone, Default)]
-pub struct Attrs(HashMap<String, String>);
+pub struct Attrs(IndexMap<String, String>);
 
 impl Attrs {
     pub fn new() -> Self {
-        Self(HashMap::new())
+        Self(IndexMap::new())
     }
 
     pub fn get<K>(&self, key: K) -> Option<&String>
@@ -119,7 +119,7 @@ impl Attrs {
     where
         K: AsRef<str>,
     {
-        self.0.remove(key.as_ref());
+        self.0.swap_remove(key.as_ref());
         self
     }
 
