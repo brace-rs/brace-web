@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use self::attribute::Attrs;
+use self::attribute::{Attr, Attrs};
 use super::Nodes;
 use crate::render::{Render, Renderer, Result as RenderResult};
 
@@ -73,7 +73,9 @@ impl Render for Element {
         write!(renderer, "<{}", self.tag)?;
 
         for (key, val) in &self.attrs {
-            write!(renderer, " {}=\"{}\"", key, val)?;
+            match val {
+                Attr::String(string) => write!(renderer, " {}=\"{}\"", key, string)?,
+            }
         }
 
         write!(renderer, ">")?;
@@ -120,7 +122,13 @@ mod tests {
         element_1.attrs_mut().insert("class", "test_1");
         element_2.attrs_mut().insert("class", "test_2");
 
-        assert_eq!(element_1.attrs().get("class").unwrap(), "test_1");
-        assert_eq!(element_2.attrs().get("class").unwrap(), "test_2");
+        assert_eq!(
+            element_1.attrs().get("class").unwrap().as_string().unwrap(),
+            "test_1"
+        );
+        assert_eq!(
+            element_2.attrs().get("class").unwrap().as_string().unwrap(),
+            "test_2"
+        );
     }
 }
