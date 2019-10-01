@@ -119,6 +119,14 @@ impl Attrs {
         self
     }
 
+    pub fn remove<K>(&mut self, key: K) -> &mut Self
+    where
+        K: AsRef<str>,
+    {
+        self.inner.remove(key.as_ref());
+        self
+    }
+
     pub fn len(&self) -> usize {
         self.inner.len()
     }

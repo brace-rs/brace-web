@@ -118,6 +118,11 @@ impl Nodes {
         self
     }
 
+    pub fn remove(&mut self, index: usize) -> &mut Self {
+        self.inner.remove(index);
+        self
+    }
+
     pub fn len(&self) -> usize {
         self.inner.len()
     }
