@@ -1,5 +1,6 @@
 use std::fmt::Write;
 use std::mem::replace;
+use std::ops::{Index, IndexMut};
 
 use lazy_static::lazy_static;
 
@@ -149,6 +150,41 @@ impl Render for Element {
     }
 }
 
+impl Index<&str> for Element {
+    type Output = Attr;
+
+    fn index(&self, index: &str) -> &Self::Output {
+        static NONE: Attr = Attr::none();
+
+        self.0.get(index).unwrap_or(&NONE)
+    }
+}
+
+impl IndexMut<&str> for Element {
+    fn index_mut(&mut self, index: &str) -> &mut Self::Output {
+        (self.0)
+            .0
+            .entry(index.to_owned())
+            .or_insert_with(Attr::none)
+    }
+}
+
+impl Index<String> for Element {
+    type Output = Attr;
+
+    fn index(&self, index: String) -> &Self::Output {
+        static NONE: Attr = Attr::none();
+
+        self.0.get(&index).unwrap_or(&NONE)
+    }
+}
+
+impl IndexMut<String> for Element {
+    fn index_mut(&mut self, index: String) -> &mut Self::Output {
+        (self.0).0.entry(index).or_insert_with(Attr::none)
+    }
+}
+
 impl From<&str> for Element {
     fn from(from: &str) -> Self {
         Self::new(from)
@@ -163,6 +199,7 @@ impl From<String> for Element {
 
 #[cfg(test)]
 mod tests {
+    use super::attribute::Attr;
     use crate::{Element, Text};
 
     #[test]
@@ -262,5 +299,29 @@ mod tests {
         assert_eq!(node_2.tag(), "span");
         assert_eq!(node_2.get("tag").unwrap().as_string().unwrap(), "span");
         assert_eq!(node_2.get("class").unwrap().as_string().unwrap(), "two");
+    }
+
+    #[test]
+    fn test_element_indexing() {
+        let mut element = Element::new("div").attr("class", "testing");
+
+        assert!(element["id"].is_none());
+        assert!(element["class"].is_string());
+        assert_eq!(element["class"].as_string().unwrap(), "testing");
+
+        element["one"] = Attr::string("hello world");
+
+        assert!(element["one"].is_string());
+        assert_eq!(element["one"].as_string().unwrap(), "hello world");
+
+        element["two"] = Text::new("hello world").into();
+
+        assert!(element["two"].is_nodes());
+        assert_eq!(element["two"].as_nodes().unwrap().len(), 1);
+
+        element["three"] = vec![Element::new("div"), Element::new("span")].into();
+
+        assert!(element["three"].is_nodes());
+        assert_eq!(element["three"].as_nodes().unwrap().len(), 2);
     }
 }
