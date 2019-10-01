@@ -55,6 +55,6 @@ mod tests {
 
         let text = body.as_element().unwrap().nodes().get(0).unwrap();
 
-        assert_eq!(text.as_text().unwrap().value, "hello world");
+        assert_eq!(text.as_text().unwrap().value(), "hello world");
     }
 }

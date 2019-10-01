@@ -85,29 +85,25 @@ impl From<String> for Element {
 }
 
 #[derive(Clone, Default)]
-pub struct Attrs {
-    inner: HashMap<String, String>,
-}
+pub struct Attrs(HashMap<String, String>);
 
 impl Attrs {
     pub fn new() -> Self {
-        Self {
-            inner: HashMap::new(),
-        }
+        Self(HashMap::new())
     }
 
     pub fn get<K>(&self, key: K) -> Option<&String>
     where
         K: AsRef<str>,
     {
-        self.inner.get(key.as_ref())
+        self.0.get(key.as_ref())
     }
 
     pub fn get_mut<K>(&mut self, key: K) -> Option<&mut String>
     where
         K: AsRef<str>,
     {
-        self.inner.get_mut(key.as_ref())
+        self.0.get_mut(key.as_ref())
     }
 
     pub fn insert<K, V>(&mut self, key: K, value: V) -> &mut Self
@@ -115,7 +111,7 @@ impl Attrs {
         K: Into<String>,
         V: Into<String>,
     {
-        self.inner.insert(key.into(), value.into());
+        self.0.insert(key.into(), value.into());
         self
     }
 
@@ -123,12 +119,12 @@ impl Attrs {
     where
         K: AsRef<str>,
     {
-        self.inner.remove(key.as_ref());
+        self.0.remove(key.as_ref());
         self
     }
 
     pub fn len(&self) -> usize {
-        self.inner.len()
+        self.0.len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -136,11 +132,11 @@ impl Attrs {
     }
 
     pub fn iter(&self) -> Iter<'_, String, String> {
-        self.inner.iter()
+        self.0.iter()
     }
 
     pub fn iter_mut(&mut self) -> IterMut<'_, String, String> {
-        self.inner.iter_mut()
+        self.0.iter_mut()
     }
 }
 
@@ -149,7 +145,7 @@ impl IntoIterator for Attrs {
     type IntoIter = IntoIter<String, String>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.into_iter()
+        self.0.into_iter()
     }
 }
 

@@ -6,29 +6,33 @@ where
 }
 
 #[derive(Clone)]
-pub struct Text {
-    pub value: String,
-}
+pub struct Text(String);
 
 impl Text {
     pub fn new<T>(text: T) -> Self
     where
         T: Into<String>,
     {
-        Self { value: text.into() }
+        Self(text.into())
+    }
+
+    pub fn value(&self) -> &str {
+        &self.0
+    }
+
+    pub fn value_mut(&mut self) -> &mut String {
+        &mut self.0
     }
 }
 
 impl From<&str> for Text {
     fn from(from: &str) -> Self {
-        Self {
-            value: from.to_owned(),
-        }
+        Self(from.to_owned())
     }
 }
 
 impl From<String> for Text {
     fn from(from: String) -> Self {
-        Self { value: from }
+        Self(from)
     }
 }

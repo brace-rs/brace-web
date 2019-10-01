@@ -83,30 +83,26 @@ impl From<Element> for Node {
 }
 
 #[derive(Clone, Default)]
-pub struct Nodes {
-    inner: VecDeque<Node>,
-}
+pub struct Nodes(VecDeque<Node>);
 
 impl Nodes {
     pub fn new() -> Self {
-        Self {
-            inner: VecDeque::new(),
-        }
+        Self(VecDeque::new())
     }
 
     pub fn get(&self, index: usize) -> Option<&Node> {
-        self.inner.get(index)
+        self.0.get(index)
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut Node> {
-        self.inner.get_mut(index)
+        self.0.get_mut(index)
     }
 
     pub fn append<T>(&mut self, node: T) -> &mut Self
     where
         T: Into<Node>,
     {
-        self.inner.push_back(node.into());
+        self.0.push_back(node.into());
         self
     }
 
@@ -114,17 +110,17 @@ impl Nodes {
     where
         T: Into<Node>,
     {
-        self.inner.push_front(node.into());
+        self.0.push_front(node.into());
         self
     }
 
     pub fn remove(&mut self, index: usize) -> &mut Self {
-        self.inner.remove(index);
+        self.0.remove(index);
         self
     }
 
     pub fn len(&self) -> usize {
-        self.inner.len()
+        self.0.len()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -132,11 +128,11 @@ impl Nodes {
     }
 
     pub fn iter(&self) -> Iter<'_, Node> {
-        self.inner.iter()
+        self.0.iter()
     }
 
     pub fn iter_mut(&mut self) -> IterMut<'_, Node> {
-        self.inner.iter_mut()
+        self.0.iter_mut()
     }
 }
 
@@ -145,7 +141,7 @@ impl IntoIterator for Nodes {
     type IntoIter = IntoIter<Node>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.inner.into_iter()
+        self.0.into_iter()
     }
 }
 
@@ -175,55 +171,43 @@ impl From<()> for Nodes {
 
 impl From<&str> for Nodes {
     fn from(from: &str) -> Self {
-        Self {
-            inner: vec![Node::text(from)].into(),
-        }
+        Self(vec![Node::text(from)].into())
     }
 }
 
 impl From<String> for Nodes {
     fn from(from: String) -> Self {
-        Self {
-            inner: vec![Node::text(from)].into(),
-        }
+        Self(vec![Node::text(from)].into())
     }
 }
 
 impl From<Text> for Nodes {
     fn from(from: Text) -> Self {
-        Self {
-            inner: vec![Node::from(from)].into(),
-        }
+        Self(vec![Node::from(from)].into())
     }
 }
 
 impl From<Element> for Nodes {
     fn from(from: Element) -> Self {
-        Self {
-            inner: vec![Node::from(from)].into(),
-        }
+        Self(vec![Node::from(from)].into())
     }
 }
 
 impl From<Node> for Nodes {
     fn from(from: Node) -> Self {
-        Self {
-            inner: vec![from].into(),
-        }
+        Self(vec![from].into())
     }
 }
 
 impl From<&[Node]> for Nodes {
     fn from(from: &[Node]) -> Self {
-        Self {
-            inner: from.to_vec().into(),
-        }
+        Self(from.to_vec().into())
     }
 }
 
 impl From<Vec<Node>> for Nodes {
     fn from(from: Vec<Node>) -> Self {
-        Self { inner: from.into() }
+        Self(from.into())
     }
 }
 
@@ -276,12 +260,12 @@ mod tests {
         for node in &mut nodes {
             assert!(node.is_text());
 
-            node.as_text_mut().unwrap().value = "goodbye".to_owned();
+            *node.as_text_mut().unwrap().value_mut() = "goodbye".to_owned();
         }
 
         for node in nodes {
             assert!(node.is_text());
-            assert_eq!(node.as_text().unwrap().value, "goodbye");
+            assert_eq!(node.as_text().unwrap().value(), "goodbye");
         }
     }
 }
