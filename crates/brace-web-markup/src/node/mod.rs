@@ -2,6 +2,7 @@ use std::collections::vec_deque::{IntoIter, Iter, IterMut, VecDeque};
 
 use self::element::Element;
 use self::text::Text;
+use crate::render::{Render, Renderer, Result as RenderResult};
 
 pub mod element;
 pub mod text;
@@ -66,6 +67,15 @@ impl Node {
         match self {
             Self::Element(element) => Some(element),
             _ => None,
+        }
+    }
+}
+
+impl Render for Node {
+    fn render(&self, renderer: &mut Renderer) -> RenderResult {
+        match self {
+            Self::Text(text) => text.render(renderer),
+            Self::Element(element) => element.render(renderer),
         }
     }
 }

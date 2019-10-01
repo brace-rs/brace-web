@@ -1,3 +1,7 @@
+use std::fmt::Write;
+
+use crate::render::{Render, Renderer, Result as RenderResult};
+
 pub fn text<T>(text: T) -> Text
 where
     T: Into<String>,
@@ -22,6 +26,12 @@ impl Text {
 
     pub fn value_mut(&mut self) -> &mut String {
         &mut self.0
+    }
+}
+
+impl Render for Text {
+    fn render(&self, renderer: &mut Renderer) -> RenderResult {
+        Ok(write!(renderer, "{}", self.0)?)
     }
 }
 
