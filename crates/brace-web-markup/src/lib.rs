@@ -40,8 +40,12 @@ mod tests {
 
     #[test]
     fn test_node_tree_nested() {
-        let html: Node =
-            Element::with("html", Element::with("body", Text::new("hello world"))).into();
+        let html: Node = Element::with(
+            "html",
+            (),
+            Element::with("body", (), Text::new("hello world")),
+        )
+        .into();
 
         assert_eq!(html.as_element().unwrap().nodes().len(), 1);
 
