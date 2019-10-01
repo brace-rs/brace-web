@@ -1,9 +1,10 @@
 use std::fmt::Write;
 
-use indexmap::map::{IndexMap, IntoIter, Iter, IterMut};
-
+use self::attribute::{Attr, Attrs};
 use super::Nodes;
 use crate::render::{Render, Renderer, Result as RenderResult};
+
+pub mod attribute;
 
 pub fn element<T, A, N>(tag: T, attrs: A, nodes: N) -> Element
 where
@@ -72,7 +73,14 @@ impl Render for Element {
         write!(renderer, "<{}", self.tag)?;
 
         for (key, val) in &self.attrs {
-            write!(renderer, " {}=\"{}\"", key, val)?;
+            match val {
+                Attr::String(string) => write!(renderer, " {}=\"{}\"", key, string)?,
+                Attr::Boolean(boolean) => {
+                    if *boolean {
+                        write!(renderer, " {}", key)?;
+                    }
+                }
+            }
         }
 
         write!(renderer, ">")?;
@@ -107,108 +115,53 @@ impl From<String> for Element {
     }
 }
 
-#[derive(Clone, Default)]
-pub struct Attrs(IndexMap<String, String>);
-
-impl Attrs {
-    pub fn new() -> Self {
-        Self(IndexMap::new())
-    }
-
-    pub fn get<K>(&self, key: K) -> Option<&String>
-    where
-        K: AsRef<str>,
-    {
-        self.0.get(key.as_ref())
-    }
-
-    pub fn get_mut<K>(&mut self, key: K) -> Option<&mut String>
-    where
-        K: AsRef<str>,
-    {
-        self.0.get_mut(key.as_ref())
-    }
-
-    pub fn insert<K, V>(&mut self, key: K, value: V) -> &mut Self
-    where
-        K: Into<String>,
-        V: Into<String>,
-    {
-        self.0.insert(key.into(), value.into());
-        self
-    }
-
-    pub fn remove<K>(&mut self, key: K) -> &mut Self
-    where
-        K: AsRef<str>,
-    {
-        self.0.swap_remove(key.as_ref());
-        self
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
-    pub fn iter(&self) -> Iter<'_, String, String> {
-        self.0.iter()
-    }
-
-    pub fn iter_mut(&mut self) -> IterMut<'_, String, String> {
-        self.0.iter_mut()
-    }
-}
-
-impl IntoIterator for Attrs {
-    type Item = (String, String);
-    type IntoIter = IntoIter<String, String>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a Attrs {
-    type Item = (&'a String, &'a String);
-    type IntoIter = Iter<'a, String, String>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a mut Attrs {
-    type Item = (&'a String, &'a mut String);
-    type IntoIter = IterMut<'a, String, String>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter_mut()
-    }
-}
-
-impl From<()> for Attrs {
-    fn from(_: ()) -> Self {
-        Self::default()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Element;
 
     #[test]
-    fn test_element_attributes() {
+    fn test_element_attribute_string() {
         let mut element_1 = Element::new("div");
         let mut element_2 = Element::with("div", (), ());
 
         element_1.attrs_mut().insert("class", "test_1");
         element_2.attrs_mut().insert("class", "test_2");
 
-        assert_eq!(element_1.attrs().get("class").unwrap(), "test_1");
-        assert_eq!(element_2.attrs().get("class").unwrap(), "test_2");
+        assert_eq!(
+            element_1.attrs().get("class").unwrap().as_string().unwrap(),
+            "test_1"
+        );
+        assert_eq!(
+            element_2.attrs().get("class").unwrap().as_string().unwrap(),
+            "test_2"
+        );
+    }
+
+    #[test]
+    fn test_element_attribute_boolean() {
+        let mut element_1 = Element::new("input");
+        let mut element_2 = Element::with("input", (), ());
+
+        element_1.attrs_mut().insert("selected", true);
+        element_2.attrs_mut().insert("selected", false);
+
+        assert_eq!(
+            *element_1
+                .attrs()
+                .get("selected")
+                .unwrap()
+                .as_boolean()
+                .unwrap(),
+            true
+        );
+        assert_eq!(
+            *element_2
+                .attrs()
+                .get("selected")
+                .unwrap()
+                .as_boolean()
+                .unwrap(),
+            false
+        );
     }
 }
