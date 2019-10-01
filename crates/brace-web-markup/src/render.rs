@@ -116,5 +116,20 @@ mod tests {
             render(node_3).unwrap(),
             "<div b=\"1\" a=\"2\" c=\"3\"></div>"
         );
+
+        let mut node_4 = Node::element("input");
+
+        node_4
+            .as_element_mut()
+            .unwrap()
+            .attrs_mut()
+            .insert("type", "checkbox")
+            .insert("checked", true)
+            .insert("disabled", false);
+
+        assert_eq!(
+            render(node_4).unwrap(),
+            "<input type=\"checkbox\" checked></input>"
+        );
     }
 }

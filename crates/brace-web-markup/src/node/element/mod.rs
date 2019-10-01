@@ -75,6 +75,11 @@ impl Render for Element {
         for (key, val) in &self.attrs {
             match val {
                 Attr::String(string) => write!(renderer, " {}=\"{}\"", key, string)?,
+                Attr::Boolean(boolean) => {
+                    if *boolean {
+                        write!(renderer, " {}", key)?;
+                    }
+                }
             }
         }
 
@@ -115,7 +120,7 @@ mod tests {
     use super::Element;
 
     #[test]
-    fn test_element_attributes() {
+    fn test_element_attribute_string() {
         let mut element_1 = Element::new("div");
         let mut element_2 = Element::with("div", (), ());
 
@@ -129,6 +134,34 @@ mod tests {
         assert_eq!(
             element_2.attrs().get("class").unwrap().as_string().unwrap(),
             "test_2"
+        );
+    }
+
+    #[test]
+    fn test_element_attribute_boolean() {
+        let mut element_1 = Element::new("input");
+        let mut element_2 = Element::with("input", (), ());
+
+        element_1.attrs_mut().insert("selected", true);
+        element_2.attrs_mut().insert("selected", false);
+
+        assert_eq!(
+            *element_1
+                .attrs()
+                .get("selected")
+                .unwrap()
+                .as_boolean()
+                .unwrap(),
+            true
+        );
+        assert_eq!(
+            *element_2
+                .attrs()
+                .get("selected")
+                .unwrap()
+                .as_boolean()
+                .unwrap(),
+            false
         );
     }
 }

@@ -3,6 +3,7 @@ use indexmap::map::{IndexMap, IntoIter, Iter, IterMut};
 #[derive(Clone)]
 pub enum Attr {
     String(String),
+    Boolean(bool),
 }
 
 impl Attr {
@@ -16,18 +17,49 @@ impl Attr {
     pub fn is_string(&self) -> bool {
         match self {
             Self::String(_) => true,
+            _ => false,
         }
     }
 
     pub fn as_string(&self) -> Option<&String> {
         match self {
             Self::String(string) => Some(string),
+            _ => None,
         }
     }
 
     pub fn as_string_mut(&mut self) -> Option<&mut String> {
         match self {
             Self::String(string) => Some(string),
+            _ => None,
+        }
+    }
+
+    pub fn boolean<T>(boolean: T) -> Self
+    where
+        T: Into<bool>,
+    {
+        Self::Boolean(boolean.into())
+    }
+
+    pub fn is_boolean(&self) -> bool {
+        match self {
+            Self::Boolean(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn as_boolean(&self) -> Option<&bool> {
+        match self {
+            Self::Boolean(boolean) => Some(boolean),
+            _ => None,
+        }
+    }
+
+    pub fn as_boolean_mut(&mut self) -> Option<&mut bool> {
+        match self {
+            Self::Boolean(boolean) => Some(boolean),
+            _ => None,
         }
     }
 }
@@ -41,6 +73,12 @@ impl From<&str> for Attr {
 impl From<String> for Attr {
     fn from(from: String) -> Self {
         Self::String(from)
+    }
+}
+
+impl From<bool> for Attr {
+    fn from(from: bool) -> Self {
+        Self::Boolean(from)
     }
 }
 
