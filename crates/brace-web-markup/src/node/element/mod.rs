@@ -1,10 +1,18 @@
 use std::fmt::Write;
+use std::mem::replace;
+
+use lazy_static::lazy_static;
 
 use self::attribute::{Attr, Attrs};
 use super::Nodes;
 use crate::render::{Render, Renderer, Result as RenderResult};
 
 pub mod attribute;
+
+lazy_static! {
+    static ref TAG: String = String::from("div");
+    static ref NODES: Nodes = Nodes::new();
+}
 
 pub fn element<T, A, N>(tag: T, attrs: A, nodes: N) -> Element
 where
@@ -16,22 +24,19 @@ where
 }
 
 #[derive(Clone)]
-pub struct Element {
-    tag: String,
-    attrs: Attrs,
-    nodes: Nodes,
-}
+pub struct Element(Attrs);
 
 impl Element {
     pub fn new<T>(tag: T) -> Self
     where
         T: Into<String>,
     {
-        Self {
-            tag: tag.into(),
-            attrs: Attrs::new(),
-            nodes: Nodes::new(),
-        }
+        let mut attrs = Attrs::new();
+
+        attrs.insert("tag".to_owned(), Attr::string(tag));
+        attrs.insert("nodes".to_owned(), Attr::nodes(()));
+
+        Self(attrs)
     }
 
     pub fn with<T, A, N>(tag: T, attrs: A, nodes: N) -> Self
@@ -40,56 +45,105 @@ impl Element {
         A: Into<Attrs>,
         N: Into<Nodes>,
     {
-        Self {
-            tag: tag.into(),
-            attrs: attrs.into(),
-            nodes: nodes.into(),
-        }
+        let mut attrs = attrs.into();
+
+        attrs.insert("tag".to_owned(), Attr::string(tag));
+        attrs.insert("nodes".to_owned(), Attr::nodes(nodes));
+
+        Self(attrs)
     }
 
-    pub fn tag(&self) -> &str {
-        &self.tag
+    pub fn tag(&self) -> &String {
+        &self.0.get("tag").and_then(Attr::as_string).unwrap_or(&TAG)
     }
 
     pub fn attrs(&self) -> &Attrs {
-        &self.attrs
+        &self.0
     }
 
     pub fn attrs_mut(&mut self) -> &mut Attrs {
-        &mut self.attrs
+        &mut self.0
     }
 
     pub fn nodes(&self) -> &Nodes {
-        &self.nodes
+        self.0
+            .get("nodes")
+            .and_then(Attr::as_nodes)
+            .unwrap_or(&NODES)
     }
 
     pub fn nodes_mut(&mut self) -> &mut Nodes {
-        &mut self.nodes
+        (self.0)
+            .0
+            .entry("nodes".to_owned())
+            .and_modify(|item| {
+                if !item.is_nodes() {
+                    replace(item, Attr::nodes(()));
+                }
+            })
+            .or_insert_with(|| Attr::nodes(()))
+            .as_nodes_mut()
+            .unwrap()
+    }
+
+    pub fn get<K>(&self, key: K) -> Option<&Attr>
+    where
+        K: AsRef<str>,
+    {
+        self.0.get(key.as_ref())
+    }
+
+    pub fn get_mut<K>(&mut self, key: K) -> Option<&mut Attr>
+    where
+        K: AsRef<str>,
+    {
+        self.0.get_mut(key.as_ref())
+    }
+
+    pub fn set<K, V>(&mut self, key: K, val: V) -> &mut Self
+    where
+        K: Into<String>,
+        V: Into<Attr>,
+    {
+        self.0.insert(key, val);
+        self
+    }
+
+    pub fn attr<K, V>(mut self, key: K, val: V) -> Self
+    where
+        K: Into<String>,
+        V: Into<Attr>,
+    {
+        self.0.insert(key, val);
+        self
     }
 }
 
 impl Render for Element {
     fn render(&self, renderer: &mut Renderer) -> RenderResult {
-        write!(renderer, "<{}", self.tag)?;
+        write!(renderer, "<{}", self.tag())?;
 
-        for (key, val) in &self.attrs {
-            match val {
-                Attr::String(string) => write!(renderer, " {}=\"{}\"", key, string)?,
-                Attr::Boolean(boolean) => {
-                    if *boolean {
-                        write!(renderer, " {}", key)?;
+        for (key, val) in self.attrs() {
+            if key != "tag" && key != "nodes" {
+                match val {
+                    Attr::String(string) => write!(renderer, " {}=\"{}\"", key, string)?,
+                    Attr::Boolean(boolean) => {
+                        if *boolean {
+                            write!(renderer, " {}", key)?;
+                        }
                     }
+                    _ => (),
                 }
             }
         }
 
         write!(renderer, ">")?;
 
-        for node in &self.nodes {
+        for node in self.nodes() {
             node.render(renderer)?;
         }
 
-        write!(renderer, "</{}>", self.tag)?;
+        write!(renderer, "</{}>", self.tag())?;
 
         Ok(())
     }
@@ -97,27 +151,19 @@ impl Render for Element {
 
 impl From<&str> for Element {
     fn from(from: &str) -> Self {
-        Self {
-            tag: from.to_owned(),
-            attrs: Attrs::new(),
-            nodes: Nodes::new(),
-        }
+        Self::new(from)
     }
 }
 
 impl From<String> for Element {
     fn from(from: String) -> Self {
-        Self {
-            tag: from,
-            attrs: Attrs::new(),
-            nodes: Nodes::new(),
-        }
+        Self::new(from)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Element;
+    use crate::{Element, Text};
 
     #[test]
     fn test_element_attribute_string() {
@@ -163,5 +209,46 @@ mod tests {
                 .unwrap(),
             false
         );
+    }
+
+    #[test]
+    fn test_element_impl() {
+        let element = Element::new("div")
+            .attr("id", "test")
+            .attr("class", "testing")
+            .attr(
+                "nodes",
+                vec![
+                    Element::new("span")
+                        .attr("class", "one")
+                        .attr("nodes", Text::new("one")),
+                    Element::new("span")
+                        .attr("class", "two")
+                        .attr("nodes", Text::new("two")),
+                ],
+            );
+
+        assert_eq!(element.nodes().len(), 2);
+        assert_eq!(element.tag(), "div");
+        assert_eq!(element.get("tag").unwrap().as_string().unwrap(), "div");
+        assert_eq!(element.get("id").unwrap().as_string().unwrap(), "test");
+        assert_eq!(
+            element.get("class").unwrap().as_string().unwrap(),
+            "testing"
+        );
+
+        let node_1 = element.nodes().get(0).unwrap().as_element().unwrap();
+
+        assert_eq!(node_1.nodes().len(), 1);
+        assert_eq!(node_1.tag(), "span");
+        assert_eq!(node_1.get("tag").unwrap().as_string().unwrap(), "span");
+        assert_eq!(node_1.get("class").unwrap().as_string().unwrap(), "one");
+
+        let node_2 = element.nodes().get(1).unwrap().as_element().unwrap();
+
+        assert_eq!(node_2.nodes().len(), 1);
+        assert_eq!(node_2.tag(), "span");
+        assert_eq!(node_2.get("tag").unwrap().as_string().unwrap(), "span");
+        assert_eq!(node_2.get("class").unwrap().as_string().unwrap(), "two");
     }
 }

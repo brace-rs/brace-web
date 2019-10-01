@@ -197,9 +197,21 @@ impl From<Text> for Nodes {
     }
 }
 
+impl From<Vec<Text>> for Nodes {
+    fn from(from: Vec<Text>) -> Self {
+        Self(from.into_iter().map(Node::from).collect())
+    }
+}
+
 impl From<Element> for Nodes {
     fn from(from: Element) -> Self {
         Self(vec![Node::from(from)].into())
+    }
+}
+
+impl From<Vec<Element>> for Nodes {
+    fn from(from: Vec<Element>) -> Self {
+        Self(from.into_iter().map(Node::from).collect())
     }
 }
 

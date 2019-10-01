@@ -1,9 +1,14 @@
 use indexmap::map::{IndexMap, IntoIter, Iter, IterMut};
 
+use crate::node::element::Element;
+use crate::node::text::Text;
+use crate::node::{Node, Nodes};
+
 #[derive(Clone)]
 pub enum Attr {
     String(String),
     Boolean(bool),
+    Nodes(Nodes),
 }
 
 impl Attr {
@@ -62,6 +67,34 @@ impl Attr {
             _ => None,
         }
     }
+
+    pub fn nodes<T>(nodes: T) -> Self
+    where
+        T: Into<Nodes>,
+    {
+        Self::Nodes(nodes.into())
+    }
+
+    pub fn is_nodes(&self) -> bool {
+        match self {
+            Self::Nodes(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn as_nodes(&self) -> Option<&Nodes> {
+        match self {
+            Self::Nodes(nodes) => Some(nodes),
+            _ => None,
+        }
+    }
+
+    pub fn as_nodes_mut(&mut self) -> Option<&mut Nodes> {
+        match self {
+            Self::Nodes(nodes) => Some(nodes),
+            _ => None,
+        }
+    }
 }
 
 impl From<&str> for Attr {
@@ -82,8 +115,50 @@ impl From<bool> for Attr {
     }
 }
 
+impl From<Text> for Attr {
+    fn from(from: Text) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Vec<Text>> for Attr {
+    fn from(from: Vec<Text>) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Element> for Attr {
+    fn from(from: Element) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Vec<Element>> for Attr {
+    fn from(from: Vec<Element>) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Node> for Attr {
+    fn from(from: Node) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Vec<Node>> for Attr {
+    fn from(from: Vec<Node>) -> Self {
+        Self::Nodes(from.into())
+    }
+}
+
+impl From<Nodes> for Attr {
+    fn from(from: Nodes) -> Self {
+        Self::Nodes(from)
+    }
+}
+
 #[derive(Clone, Default)]
-pub struct Attrs(IndexMap<String, Attr>);
+pub struct Attrs(pub(crate) IndexMap<String, Attr>);
 
 impl Attrs {
     pub fn new() -> Self {
