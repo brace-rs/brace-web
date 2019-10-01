@@ -9,6 +9,7 @@ pub enum Attr {
     String(String),
     Boolean(bool),
     Nodes(Nodes),
+    None,
 }
 
 impl Attr {
@@ -94,6 +95,23 @@ impl Attr {
             Self::Nodes(nodes) => Some(nodes),
             _ => None,
         }
+    }
+
+    pub fn none() -> Self {
+        Self::None
+    }
+
+    pub fn is_none(&self) -> bool {
+        match self {
+            Self::None => true,
+            _ => false,
+        }
+    }
+}
+
+impl From<()> for Attr {
+    fn from(_: ()) -> Self {
+        Self::None
     }
 }
 
