@@ -1,9 +1,12 @@
 use indexmap::map::{IndexMap, IntoIter, Iter, IterMut};
 
+use crate::node::Nodes;
+
 #[derive(Clone)]
 pub enum Attr {
     String(String),
     Boolean(bool),
+    Nodes(Nodes),
 }
 
 impl Attr {
@@ -62,6 +65,34 @@ impl Attr {
             _ => None,
         }
     }
+
+    pub fn nodes<T>(nodes: T) -> Self
+    where
+        T: Into<Nodes>,
+    {
+        Self::Nodes(nodes.into())
+    }
+
+    pub fn is_nodes(&self) -> bool {
+        match self {
+            Self::Nodes(_) => true,
+            _ => false,
+        }
+    }
+
+    pub fn as_nodes(&self) -> Option<&Nodes> {
+        match self {
+            Self::Nodes(nodes) => Some(nodes),
+            _ => None,
+        }
+    }
+
+    pub fn as_nodes_mut(&mut self) -> Option<&mut Nodes> {
+        match self {
+            Self::Nodes(nodes) => Some(nodes),
+            _ => None,
+        }
+    }
 }
 
 impl From<&str> for Attr {
@@ -83,7 +114,7 @@ impl From<bool> for Attr {
 }
 
 #[derive(Clone, Default)]
-pub struct Attrs(IndexMap<String, Attr>);
+pub struct Attrs(pub(crate) IndexMap<String, Attr>);
 
 impl Attrs {
     pub fn new() -> Self {

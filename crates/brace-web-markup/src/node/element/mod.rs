@@ -1,10 +1,18 @@
 use std::fmt::Write;
+use std::mem::replace;
+
+use lazy_static::lazy_static;
 
 use self::attribute::{Attr, Attrs};
 use super::Nodes;
 use crate::render::{Render, Renderer, Result as RenderResult};
 
 pub mod attribute;
+
+lazy_static! {
+    static ref TAG: String = String::from("div");
+    static ref NODES: Nodes = Nodes::new();
+}
 
 pub fn element<T, A, N>(tag: T, attrs: A, nodes: N) -> Element
 where
@@ -16,22 +24,19 @@ where
 }
 
 #[derive(Clone)]
-pub struct Element {
-    tag: String,
-    attrs: Attrs,
-    nodes: Nodes,
-}
+pub struct Element(Attrs);
 
 impl Element {
     pub fn new<T>(tag: T) -> Self
     where
         T: Into<String>,
     {
-        Self {
-            tag: tag.into(),
-            attrs: Attrs::new(),
-            nodes: Nodes::new(),
-        }
+        let mut attrs = Attrs::new();
+
+        attrs.insert("tag".to_owned(), Attr::string(tag));
+        attrs.insert("nodes".to_owned(), Attr::nodes(()));
+
+        Self(attrs)
     }
 
     pub fn with<T, A, N>(tag: T, attrs: A, nodes: N) -> Self
@@ -40,56 +45,73 @@ impl Element {
         A: Into<Attrs>,
         N: Into<Nodes>,
     {
-        Self {
-            tag: tag.into(),
-            attrs: attrs.into(),
-            nodes: nodes.into(),
-        }
+        let mut attrs = attrs.into();
+
+        attrs.insert("tag".to_owned(), Attr::string(tag));
+        attrs.insert("nodes".to_owned(), Attr::nodes(nodes));
+
+        Self(attrs)
     }
 
-    pub fn tag(&self) -> &str {
-        &self.tag
+    pub fn tag(&self) -> &String {
+        &self.0.get("tag").and_then(Attr::as_string).unwrap_or(&TAG)
     }
 
     pub fn attrs(&self) -> &Attrs {
-        &self.attrs
+        &self.0
     }
 
     pub fn attrs_mut(&mut self) -> &mut Attrs {
-        &mut self.attrs
+        &mut self.0
     }
 
     pub fn nodes(&self) -> &Nodes {
-        &self.nodes
+        self.0
+            .get("nodes")
+            .and_then(Attr::as_nodes)
+            .unwrap_or(&NODES)
     }
 
     pub fn nodes_mut(&mut self) -> &mut Nodes {
-        &mut self.nodes
+        (self.0)
+            .0
+            .entry("nodes".to_owned())
+            .and_modify(|item| {
+                if !item.is_nodes() {
+                    replace(item, Attr::nodes(()));
+                }
+            })
+            .or_insert_with(|| Attr::nodes(()))
+            .as_nodes_mut()
+            .unwrap()
     }
 }
 
 impl Render for Element {
     fn render(&self, renderer: &mut Renderer) -> RenderResult {
-        write!(renderer, "<{}", self.tag)?;
+        write!(renderer, "<{}", self.tag())?;
 
-        for (key, val) in &self.attrs {
-            match val {
-                Attr::String(string) => write!(renderer, " {}=\"{}\"", key, string)?,
-                Attr::Boolean(boolean) => {
-                    if *boolean {
-                        write!(renderer, " {}", key)?;
+        for (key, val) in self.attrs() {
+            if key != "tag" && key != "nodes" {
+                match val {
+                    Attr::String(string) => write!(renderer, " {}=\"{}\"", key, string)?,
+                    Attr::Boolean(boolean) => {
+                        if *boolean {
+                            write!(renderer, " {}", key)?;
+                        }
                     }
+                    _ => (),
                 }
             }
         }
 
         write!(renderer, ">")?;
 
-        for node in &self.nodes {
+        for node in self.nodes() {
             node.render(renderer)?;
         }
 
-        write!(renderer, "</{}>", self.tag)?;
+        write!(renderer, "</{}>", self.tag())?;
 
         Ok(())
     }
@@ -97,21 +119,13 @@ impl Render for Element {
 
 impl From<&str> for Element {
     fn from(from: &str) -> Self {
-        Self {
-            tag: from.to_owned(),
-            attrs: Attrs::new(),
-            nodes: Nodes::new(),
-        }
+        Self::new(from)
     }
 }
 
 impl From<String> for Element {
     fn from(from: String) -> Self {
-        Self {
-            tag: from,
-            attrs: Attrs::new(),
-            nodes: Nodes::new(),
-        }
+        Self::new(from)
     }
 }
 
