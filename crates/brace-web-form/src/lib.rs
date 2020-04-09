@@ -1,23 +1,22 @@
+use std::fmt::{self, Debug, Display};
 use std::future::Future;
+use std::ops::{Deref, DerefMut};
 use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll};
-use std::{fmt, ops};
 
 use actix_http::{Error, HttpMessage, Payload, Response};
 use brace_web_core::dev::Decompress;
 use brace_web_core::error::UrlencodedError;
-use brace_web_core::http::{
-    header::{ContentType, CONTENT_LENGTH},
-    StatusCode,
-};
+use brace_web_core::http::header::{ContentType, CONTENT_LENGTH};
+use brace_web_core::http::StatusCode;
 use brace_web_core::{FromRequest, HttpRequest, Responder};
 use bytes::BytesMut;
 use encoding_rs::{Encoding, UTF_8};
 use futures::future::{err, ok, FutureExt, LocalBoxFuture, Ready};
-use futures::StreamExt;
+use futures::stream::StreamExt;
 use serde::de::DeserializeOwned;
-use serde::Serialize;
+use serde::ser::Serialize;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct Form<T>(pub T);
@@ -28,7 +27,7 @@ impl<T> Form<T> {
     }
 }
 
-impl<T> ops::Deref for Form<T> {
+impl<T> Deref for Form<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -36,7 +35,7 @@ impl<T> ops::Deref for Form<T> {
     }
 }
 
-impl<T> ops::DerefMut for Form<T> {
+impl<T> DerefMut for Form<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
     }
@@ -74,19 +73,28 @@ where
     }
 }
 
-impl<T: fmt::Debug> fmt::Debug for Form<T> {
+impl<T> Debug for Form<T>
+where
+    T: Debug,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl<T: fmt::Display> fmt::Display for Form<T> {
+impl<T> Display for Form<T>
+where
+    T: Display,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl<T: Serialize> Responder for Form<T> {
+impl<T> Responder for Form<T>
+where
+    T: Serialize,
+{
     type Error = Error;
     type Future = Ready<Result<Response, Error>>;
 
@@ -146,12 +154,14 @@ impl<U> UrlEncoded<U> {
         if req.content_type().to_lowercase() != "application/x-www-form-urlencoded" {
             return Self::err(UrlencodedError::ContentType);
         }
+
         let encoding = match req.encoding() {
             Ok(enc) => enc,
             Err(_) => return Self::err(UrlencodedError::ContentType),
         };
 
         let mut len = None;
+
         if let Some(l) = req.headers().get(CONTENT_LENGTH) {
             if let Ok(s) = l.to_str() {
                 if let Ok(l) = s.parse::<usize>() {
@@ -209,6 +219,7 @@ where
         }
 
         let limit = self.limit;
+
         if let Some(len) = self.length.take() {
             if len > limit {
                 return Poll::Ready(Err(UrlencodedError::Overflow { size: len, limit }));
@@ -241,11 +252,13 @@ where
                         .decode_without_bom_handling_and_without_replacement(&body)
                         .map(|s| s.into_owned())
                         .ok_or(UrlencodedError::Parse)?;
+
                     serde_urlencoded::from_str::<U>(&body).map_err(|_| UrlencodedError::Parse)
                 }
             }
             .boxed_local(),
         );
+
         self.poll(cx)
     }
 }
@@ -279,7 +292,7 @@ mod tests {
         }
     }
 
-    #[derive(Deserialize, Serialize, Debug, PartialEq)]
+    #[derive(Serialize, Deserialize, Debug, PartialEq)]
     struct Info {
         hello: String,
         counter: i64,
@@ -294,6 +307,7 @@ mod tests {
                 .to_http_parts();
 
         let Form(s) = Form::<Info>::from_request(&req, &mut pl).await.unwrap();
+
         assert_eq!(
             s,
             Info {
@@ -327,14 +341,18 @@ mod tests {
             TestRequest::with_header(CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .header(CONTENT_LENGTH, "xxxx")
                 .to_http_parts();
+
         let info = UrlEncoded::<Info>::new(&req, &mut pl).await;
+
         assert!(eq(info.err().unwrap(), UrlencodedError::UnknownLength));
 
         let (req, mut pl) =
             TestRequest::with_header(CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .header(CONTENT_LENGTH, "1000000")
                 .to_http_parts();
+
         let info = UrlEncoded::<Info>::new(&req, &mut pl).await;
+
         assert!(eq(
             info.err().unwrap(),
             UrlencodedError::Overflow { size: 0, limit: 0 }
@@ -343,7 +361,9 @@ mod tests {
         let (req, mut pl) = TestRequest::with_header(CONTENT_TYPE, "text/plain")
             .header(CONTENT_LENGTH, "10")
             .to_http_parts();
+
         let info = UrlEncoded::<Info>::new(&req, &mut pl).await;
+
         assert!(eq(info.err().unwrap(), UrlencodedError::ContentType));
     }
 
@@ -356,6 +376,7 @@ mod tests {
                 .to_http_parts();
 
         let info = UrlEncoded::<Info>::new(&req, &mut pl).await.unwrap();
+
         assert_eq!(
             info,
             Info {
@@ -373,6 +394,7 @@ mod tests {
         .to_http_parts();
 
         let info = UrlEncoded::<Info>::new(&req, &mut pl).await.unwrap();
+
         assert_eq!(
             info,
             Info {
@@ -385,18 +407,18 @@ mod tests {
     #[actix_rt::test]
     async fn test_responder() {
         let req = TestRequest::default().to_http_request();
-
         let form = Form(Info {
             hello: "world".to_string(),
             counter: 123,
         });
-        let resp = form.respond_to(&req).await.unwrap();
-        assert_eq!(resp.status(), StatusCode::OK);
+
+        let res = form.respond_to(&req).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
         assert_eq!(
-            resp.headers().get(CONTENT_TYPE).unwrap(),
+            res.headers().get(CONTENT_TYPE).unwrap(),
             HeaderValue::from_static("application/x-www-form-urlencoded")
         );
-
-        assert_eq!(resp.body().bin_ref(), b"hello=world&counter=123");
+        assert_eq!(res.body().bin_ref(), b"hello=world&counter=123");
     }
 }
