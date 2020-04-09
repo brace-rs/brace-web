@@ -6,3 +6,10 @@ description = "A web application framework."
 repository = "https://github.com/brace-rs/brace-web"
 license = "MIT OR Apache-2.0"
 edition = "2018"
+
+[features]
+default = ["markup"]
+markup = ["brace-web-markup"]
+
+[dependencies]
+brace-web-markup = { path = "../brace-web-markup", optional = true }
