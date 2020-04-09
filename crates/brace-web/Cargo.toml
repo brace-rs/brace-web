@@ -8,10 +8,12 @@ license = "MIT OR Apache-2.0"
 edition = "2018"
 
 [features]
-default = ["core", "markup"]
+default = ["core", "form", "markup"]
 core = ["brace-web-core"]
+form = ["brace-web-form"]
 markup = ["brace-web-markup"]
 
 [dependencies]
 brace-web-core = { path = "../brace-web-core", optional = true }
+brace-web-form = { path = "../brace-web-form", optional = true }
 brace-web-markup = { path = "../brace-web-markup", optional = true }
