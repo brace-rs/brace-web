@@ -255,16 +255,6 @@ impl From<Vec<Node>> for Nodes {
     }
 }
 
-impl From<Vec<Option<Node>>> for Nodes {
-    fn from(from: Vec<Option<Node>>) -> Self {
-        Self(
-            from.into_iter()
-                .filter_map(|x| x)
-                .collect::<VecDeque<Node>>(),
-        )
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::Nodes;
