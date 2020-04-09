@@ -7,7 +7,7 @@ use crate::render::{Render, Renderer, Result as RenderResult};
 pub mod element;
 pub mod text;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Node {
     Text(Text),
     Element(Element),
@@ -92,7 +92,7 @@ impl From<Element> for Node {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Nodes(VecDeque<Node>);
 
 impl Nodes {
@@ -252,6 +252,16 @@ impl From<&[Node]> for Nodes {
 impl From<Vec<Node>> for Nodes {
     fn from(from: Vec<Node>) -> Self {
         Self(from.into())
+    }
+}
+
+impl From<Vec<Option<Node>>> for Nodes {
+    fn from(from: Vec<Option<Node>>) -> Self {
+        Self(
+            from.into_iter()
+                .filter_map(|x| x)
+                .collect::<VecDeque<Node>>(),
+        )
     }
 }
 

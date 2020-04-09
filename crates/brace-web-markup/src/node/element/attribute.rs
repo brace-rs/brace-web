@@ -4,7 +4,7 @@ use crate::node::element::Element;
 use crate::node::text::Text;
 use crate::node::{Node, Nodes};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Attr {
     String(String),
     Boolean(bool),
@@ -175,7 +175,7 @@ impl From<Nodes> for Attr {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Attrs(pub(crate) IndexMap<String, Attr>);
 
 impl Attrs {
@@ -261,5 +261,17 @@ impl<'a> IntoIterator for &'a mut Attrs {
 impl From<()> for Attrs {
     fn from(_: ()) -> Self {
         Self::default()
+    }
+}
+
+impl From<Vec<(&str, Attr)>> for Attrs {
+    fn from(from: Vec<(&str, Attr)>) -> Self {
+        let mut attrs = Attrs::new();
+
+        for (name, attr) in from {
+            attrs.insert(name, attr);
+        }
+
+        attrs
     }
 }

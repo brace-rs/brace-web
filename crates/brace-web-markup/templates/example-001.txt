@@ -1,0 +1,27 @@
+html lang = "en" {
+    head {
+        meta charset = "utf-8"
+        title | "Example 001"
+
+        meta name = "description", content = "Example 001."
+        meta name = "author", content = "Me"
+
+        link rel = "stylesheet", href = "/assets/css/style.css"
+        script src = "/assets/js/script.js"
+    }
+    body {
+        header | h1 | "Example 001"
+        main {
+            p | "This is example 001."
+            p {
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                Sed eget nunc rhoncus velit pretium viverra. Pellentesque tempor
+                lacus non diam convallis fermentum. Cras eu purus et massa
+                tincidunt rhoncus eget ut lectus. Nulla lacus lorem, consequat
+                quis pharetra at, gravida in turpis. Nullam iaculis dui ut felis
+                pretium euismod. In erat mauris, volutpat vel augue vel, finibus
+                eleifend dolor. Sed sodales porta ligula, vitae volutpat nulla."
+            }
+        }
+    }
+}

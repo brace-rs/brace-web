@@ -3,4 +3,5 @@ pub use crate::node::text::Text;
 pub use crate::node::Node;
 
 pub mod node;
+pub mod parser;
 pub mod render;

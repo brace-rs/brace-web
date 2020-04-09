@@ -1,0 +1,7 @@
+div class = "field field--checkbox" {
+    label for = "my-checkbox" | "Checkbox"
+    input id = "my-checkbox", class = "input input--checkbox", type = "checkbox", checked
+    span class = "description" {
+        "Description."
+    }
+}
