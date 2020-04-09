@@ -69,7 +69,7 @@ mod tests {
     use crate::http::header::LOCATION;
     use crate::http::StatusCode;
     use crate::test::TestRequest;
-    use crate::{HttpRedirect, Responder};
+    use crate::{HttpRedirect, HttpResponse, Responder};
 
     #[actix_rt::test]
     async fn test_http_redirect_to() {
@@ -128,6 +128,14 @@ mod tests {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::MOVED_PERMANENTLY);
+        assert_eq!(res.headers().get(LOCATION).unwrap(), "www.example.com");
+    }
+
+    #[test]
+    fn test_http_redirect_into() {
+        let res: HttpResponse = HttpRedirect::to("www.example.com").into();
+
+        assert_eq!(res.status(), StatusCode::SEE_OTHER);
         assert_eq!(res.headers().get(LOCATION).unwrap(), "www.example.com");
     }
 }
