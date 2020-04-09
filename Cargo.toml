@@ -2,5 +2,6 @@
 members = [
   "crates/brace-web",
   "crates/brace-web-core",
+  "crates/brace-web-form",
   "crates/brace-web-markup",
 ]
