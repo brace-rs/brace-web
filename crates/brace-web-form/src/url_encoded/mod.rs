@@ -141,6 +141,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use brace_web_core::body::{Body, ResponseBody};
     use brace_web_core::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
     use brace_web_core::test::TestRequest;
@@ -172,6 +174,13 @@ mod tests {
     struct Info {
         hello: String,
         counter: i64,
+    }
+
+    #[derive(Serialize, Deserialize, Debug, PartialEq)]
+    struct Nested {
+        one: Info,
+        two: Vec<Info>,
+        three: HashMap<String, String>,
     }
 
     fn eq(err: UrlEncodedError, other: UrlEncodedError) -> bool {
@@ -257,6 +266,38 @@ mod tests {
             Info {
                 hello: "world".to_owned(),
                 counter: 123
+            }
+        );
+    }
+
+    #[actix_rt::test]
+    async fn test_url_encoded_nested() {
+        let query = b"one[hello]=world&one[counter]=123&two[0][hello]=hi&two[0][counter]=7&three[a]=A&three[b]=B";
+        let (req, mut pl) =
+            TestRequest::with_header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+                .set_payload(Bytes::from_static(query))
+                .to_http_parts();
+
+        let info = UrlEncoded::<Nested>::new(&req, &mut pl).await.unwrap();
+
+        assert_eq!(
+            info,
+            Nested {
+                one: Info {
+                    hello: "world".to_owned(),
+                    counter: 123,
+                },
+                two: vec![Info {
+                    hello: "hi".to_owned(),
+                    counter: 7,
+                }],
+                three: {
+                    let mut map = HashMap::new();
+
+                    map.insert("a".to_owned(), "A".to_owned());
+                    map.insert("b".to_owned(), "B".to_owned());
+                    map
+                },
             }
         );
     }
