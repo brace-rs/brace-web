@@ -6,3 +6,13 @@ description = "The web application framework form extractor."
 repository = "https://github.com/brace-rs/brace-web"
 license = "MIT OR Apache-2.0"
 edition = "2018"
+
+[dependencies]
+actix-http = "1.0"
+actix-rt = "1.0"
+brace-web-core = { path = "../brace-web-core" }
+bytes = "0.5"
+encoding_rs = "0.8"
+futures = "0.3"
+serde = "1.0"
+serde_urlencoded = "0.6"
