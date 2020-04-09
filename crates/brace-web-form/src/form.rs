@@ -3,7 +3,6 @@ use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
 use actix_http::{Error, Payload, Response};
-use brace_web_core::error::UrlencodedError;
 use brace_web_core::http::header::ContentType;
 use brace_web_core::http::StatusCode;
 use brace_web_core::{FromRequest, HttpRequest, Responder};
@@ -11,6 +10,7 @@ use futures::future::{err, ok, FutureExt, LocalBoxFuture, Ready};
 use serde::de::DeserializeOwned;
 use serde::ser::Serialize;
 
+use crate::url_encoded::error::UrlEncodedError;
 use crate::url_encoded::UrlEncoded;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
@@ -108,7 +108,7 @@ where
 #[derive(Clone)]
 pub struct FormConfig {
     limit: usize,
-    ehandler: Option<Rc<dyn Fn(UrlencodedError, &HttpRequest) -> Error>>,
+    ehandler: Option<Rc<dyn Fn(UrlEncodedError, &HttpRequest) -> Error>>,
 }
 
 impl FormConfig {
@@ -119,7 +119,7 @@ impl FormConfig {
 
     pub fn error_handler<F>(mut self, f: F) -> Self
     where
-        F: Fn(UrlencodedError, &HttpRequest) -> Error + 'static,
+        F: Fn(UrlEncodedError, &HttpRequest) -> Error + 'static,
     {
         self.ehandler = Some(Rc::new(f));
         self

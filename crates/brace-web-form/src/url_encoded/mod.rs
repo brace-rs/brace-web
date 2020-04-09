@@ -4,7 +4,6 @@ use std::task::{Context, Poll};
 
 use actix_http::{HttpMessage, Payload};
 use brace_web_core::dev::Decompress;
-use brace_web_core::error::UrlencodedError;
 use brace_web_core::http::header::CONTENT_LENGTH;
 use brace_web_core::HttpRequest;
 use bytes::BytesMut;
@@ -13,24 +12,28 @@ use futures::future::{FutureExt, LocalBoxFuture};
 use futures::stream::StreamExt;
 use serde::de::DeserializeOwned;
 
+use self::error::UrlEncodedError;
+
+pub mod error;
+
 pub struct UrlEncoded<U> {
     stream: Option<Decompress<Payload>>,
     limit: usize,
     length: Option<usize>,
     encoding: &'static Encoding,
-    err: Option<UrlencodedError>,
-    fut: Option<LocalBoxFuture<'static, Result<U, UrlencodedError>>>,
+    err: Option<UrlEncodedError>,
+    fut: Option<LocalBoxFuture<'static, Result<U, UrlEncodedError>>>,
 }
 
 impl<U> UrlEncoded<U> {
     pub fn new(req: &HttpRequest, payload: &mut Payload) -> UrlEncoded<U> {
         if req.content_type().to_lowercase() != "application/x-www-form-urlencoded" {
-            return Self::err(UrlencodedError::ContentType);
+            return Self::err(UrlEncodedError::ContentType);
         }
 
         let encoding = match req.encoding() {
             Ok(enc) => enc,
-            Err(_) => return Self::err(UrlencodedError::ContentType),
+            Err(_) => return Self::err(UrlEncodedError::ContentType),
         };
 
         let mut len = None;
@@ -40,10 +43,10 @@ impl<U> UrlEncoded<U> {
                 if let Ok(l) = s.parse::<usize>() {
                     len = Some(l)
                 } else {
-                    return Self::err(UrlencodedError::UnknownLength);
+                    return Self::err(UrlEncodedError::UnknownLength);
                 }
             } else {
-                return Self::err(UrlencodedError::UnknownLength);
+                return Self::err(UrlEncodedError::UnknownLength);
             }
         };
 
@@ -59,7 +62,7 @@ impl<U> UrlEncoded<U> {
         }
     }
 
-    fn err(e: UrlencodedError) -> Self {
+    fn err(e: UrlEncodedError) -> Self {
         UrlEncoded {
             stream: None,
             limit: 32_768,
@@ -80,7 +83,7 @@ impl<U> Future for UrlEncoded<U>
 where
     U: DeserializeOwned + 'static,
 {
-    type Output = Result<U, UrlencodedError>;
+    type Output = Result<U, UrlEncodedError>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if let Some(ref mut fut) = self.fut {
@@ -95,7 +98,7 @@ where
 
         if let Some(len) = self.length.take() {
             if len > limit {
-                return Poll::Ready(Err(UrlencodedError::Overflow { size: len, limit }));
+                return Poll::Ready(Err(UrlEncodedError::Overflow { size: len, limit }));
             }
         }
 
@@ -109,7 +112,7 @@ where
                 while let Some(item) = stream.next().await {
                     let chunk = item?;
                     if (body.len() + chunk.len()) > limit {
-                        return Err(UrlencodedError::Overflow {
+                        return Err(UrlEncodedError::Overflow {
                             size: body.len() + chunk.len(),
                             limit,
                         });
@@ -119,14 +122,14 @@ where
                 }
 
                 if encoding == UTF_8 {
-                    serde_urlencoded::from_bytes::<U>(&body).map_err(|_| UrlencodedError::Parse)
+                    serde_urlencoded::from_bytes::<U>(&body).map_err(|_| UrlEncodedError::Parse)
                 } else {
                     let body = encoding
                         .decode_without_bom_handling_and_without_replacement(&body)
                         .map(|s| s.into_owned())
-                        .ok_or(UrlencodedError::Parse)?;
+                        .ok_or(UrlEncodedError::Parse)?;
 
-                    serde_urlencoded::from_str::<U>(&body).map_err(|_| UrlencodedError::Parse)
+                    serde_urlencoded::from_str::<U>(&body).map_err(|_| UrlEncodedError::Parse)
                 }
             }
             .boxed_local(),
@@ -139,13 +142,12 @@ where
 #[cfg(test)]
 mod tests {
     use brace_web_core::body::{Body, ResponseBody};
-    use brace_web_core::error::UrlencodedError;
     use brace_web_core::http::header::{CONTENT_LENGTH, CONTENT_TYPE};
     use brace_web_core::test::TestRequest;
     use bytes::Bytes;
     use serde::{Deserialize, Serialize};
 
-    use super::UrlEncoded;
+    use super::{UrlEncoded, UrlEncodedError};
 
     pub(crate) trait BodyTest {
         fn bin_ref(&self) -> &[u8];
@@ -172,18 +174,18 @@ mod tests {
         counter: i64,
     }
 
-    fn eq(err: UrlencodedError, other: UrlencodedError) -> bool {
+    fn eq(err: UrlEncodedError, other: UrlEncodedError) -> bool {
         match err {
-            UrlencodedError::Overflow { .. } => match other {
-                UrlencodedError::Overflow { .. } => true,
+            UrlEncodedError::Overflow { .. } => match other {
+                UrlEncodedError::Overflow { .. } => true,
                 _ => false,
             },
-            UrlencodedError::UnknownLength => match other {
-                UrlencodedError::UnknownLength => true,
+            UrlEncodedError::UnknownLength => match other {
+                UrlEncodedError::UnknownLength => true,
                 _ => false,
             },
-            UrlencodedError::ContentType => match other {
-                UrlencodedError::ContentType => true,
+            UrlEncodedError::ContentType => match other {
+                UrlEncodedError::ContentType => true,
                 _ => false,
             },
             _ => false,
@@ -199,7 +201,7 @@ mod tests {
 
         let info = UrlEncoded::<Info>::new(&req, &mut pl).await;
 
-        assert!(eq(info.err().unwrap(), UrlencodedError::UnknownLength));
+        assert!(eq(info.err().unwrap(), UrlEncodedError::UnknownLength));
 
         let (req, mut pl) =
             TestRequest::with_header(CONTENT_TYPE, "application/x-www-form-urlencoded")
@@ -210,7 +212,7 @@ mod tests {
 
         assert!(eq(
             info.err().unwrap(),
-            UrlencodedError::Overflow { size: 0, limit: 0 }
+            UrlEncodedError::Overflow { size: 0, limit: 0 }
         ));
 
         let (req, mut pl) = TestRequest::with_header(CONTENT_TYPE, "text/plain")
@@ -219,7 +221,7 @@ mod tests {
 
         let info = UrlEncoded::<Info>::new(&req, &mut pl).await;
 
-        assert!(eq(info.err().unwrap(), UrlencodedError::ContentType));
+        assert!(eq(info.err().unwrap(), UrlEncodedError::ContentType));
     }
 
     #[actix_rt::test]
