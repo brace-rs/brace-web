@@ -9,10 +9,12 @@ edition = "2018"
 
 [dependencies]
 actix-http = "1.0"
-actix-rt = "1.0"
 brace-web-core = { path = "../brace-web-core" }
 bytes = "0.5"
 encoding_rs = "0.8"
 futures = "0.3"
 serde = "1.0"
 serde_qs = "0.5"
+
+[dev-dependencies]
+actix-rt = "1.0"
