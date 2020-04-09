@@ -7,7 +7,7 @@ use crate::render::{Render, Renderer, Result as RenderResult};
 pub mod element;
 pub mod text;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Node {
     Text(Text),
     Element(Element),
@@ -92,7 +92,7 @@ impl From<Element> for Node {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Nodes(VecDeque<Node>);
 
 impl Nodes {

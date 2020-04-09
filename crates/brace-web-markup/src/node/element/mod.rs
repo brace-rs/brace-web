@@ -24,7 +24,7 @@ where
     Element::with(tag, attrs, nodes)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Element(Attrs);
 
 impl Element {
@@ -194,6 +194,12 @@ impl From<&str> for Element {
 impl From<String> for Element {
     fn from(from: String) -> Self {
         Self::new(from)
+    }
+}
+
+impl From<(&str, Attrs, Nodes)> for Element {
+    fn from(from: (&str, Attrs, Nodes)) -> Self {
+        Self::with(from.0, from.1, from.2)
     }
 }
 

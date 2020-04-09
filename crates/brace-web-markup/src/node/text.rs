@@ -9,7 +9,7 @@ where
     Text::new(text)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Text(String);
 
 impl Text {
