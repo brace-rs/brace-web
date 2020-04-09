@@ -94,9 +94,9 @@ where
     type Future = Ready<Result<Response, Error>>;
 
     fn respond_to(self, _: &HttpRequest) -> Self::Future {
-        let body = match serde_urlencoded::to_string(&self.0) {
+        let body = match serde_qs::to_string(&self.0) {
             Ok(body) => body,
-            Err(e) => return err(e.into()),
+            Err(_) => return err(UrlEncodedError::Parse.into()),
         };
 
         ok(Response::build(StatusCode::OK)

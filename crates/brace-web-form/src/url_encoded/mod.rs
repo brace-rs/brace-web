@@ -122,14 +122,14 @@ where
                 }
 
                 if encoding == UTF_8 {
-                    serde_urlencoded::from_bytes::<U>(&body).map_err(|_| UrlEncodedError::Parse)
+                    serde_qs::from_bytes::<U>(&body).map_err(|_| UrlEncodedError::Parse)
                 } else {
                     let body = encoding
                         .decode_without_bom_handling_and_without_replacement(&body)
                         .map(|s| s.into_owned())
                         .ok_or(UrlEncodedError::Parse)?;
 
-                    serde_urlencoded::from_str::<U>(&body).map_err(|_| UrlEncodedError::Parse)
+                    serde_qs::from_str::<U>(&body).map_err(|_| UrlEncodedError::Parse)
                 }
             }
             .boxed_local(),
