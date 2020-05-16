@@ -90,14 +90,15 @@ mod tests {
             .as_element_mut()
             .unwrap()
             .nodes_mut()
-            .append(Node::element(
-                Element::new("head").with_node(Element::new("title").with_node("Hello world")),
-            ))
+            .append(Node::element(Element::new("head").with_nodes(vec![
+                Element::new("title").with_node("Hello world").into(),
+                Element::new("meta").with_attr("charset", "utf-8").into(),
+            ])))
             .append(Node::element(Element::new("body").with_node("hello world")));
 
         assert_eq!(
             render(node_2).unwrap(),
-            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Hello world</title></head><body>hello world</body></html>"
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Hello world</title><meta charset=\"utf-8\" /></head><body>hello world</body></html>"
         );
 
         let mut node_3 = Node::element("div");
@@ -127,7 +128,7 @@ mod tests {
 
         assert_eq!(
             render(node_4).unwrap(),
-            "<input type=\"checkbox\" checked></input>"
+            "<input type=\"checkbox\" checked />"
         );
     }
 }
