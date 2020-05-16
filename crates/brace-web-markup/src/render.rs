@@ -84,18 +84,16 @@ mod tests {
             .as_element_mut()
             .unwrap()
             .attrs_mut()
-            .insert("xmlns", "http://www.w3.org/1999/xhtml");
+            .set("xmlns", "http://www.w3.org/1999/xhtml");
 
         node_2
             .as_element_mut()
             .unwrap()
             .nodes_mut()
-            .append(Node::element(Element::with(
-                "head",
-                (),
-                Element::with("title", (), "Hello world"),
-            )))
-            .append(Node::element(Element::with("body", (), "hello world")));
+            .append(Node::element(
+                Element::new("head").with_node(Element::new("title").with_node("Hello world")),
+            ))
+            .append(Node::element(Element::new("body").with_node("hello world")));
 
         assert_eq!(
             render(node_2).unwrap(),
@@ -108,9 +106,9 @@ mod tests {
             .as_element_mut()
             .unwrap()
             .attrs_mut()
-            .insert("b", "1")
-            .insert("a", "2")
-            .insert("c", "3");
+            .set("b", "1")
+            .set("a", "2")
+            .set("c", "3");
 
         assert_eq!(
             render(node_3).unwrap(),
@@ -123,9 +121,9 @@ mod tests {
             .as_element_mut()
             .unwrap()
             .attrs_mut()
-            .insert("type", "checkbox")
-            .insert("checked", true)
-            .insert("disabled", false);
+            .set("type", "checkbox")
+            .set("checked", true)
+            .set("disabled", false);
 
         assert_eq!(
             render(node_4).unwrap(),

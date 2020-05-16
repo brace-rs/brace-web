@@ -1,6 +1,6 @@
 use brace_parser::prelude::*;
 
-use crate::node::element::attribute::{Attr, Attrs};
+use crate::node::attribute::{Attribute, Attributes};
 use crate::node::element::Element;
 use crate::node::text::Text;
 use crate::node::{Node, Nodes};
@@ -180,17 +180,20 @@ pub fn key(input: &str) -> Output<&str> {
     )
 }
 
-pub fn attribute(input: &str) -> Output<Attr> {
+pub fn attribute(input: &str) -> Output<Attribute> {
     parse(
         input,
         context(
             "attribute",
-            either(map(string, Attr::string), map(boolean, Attr::boolean)),
+            either(
+                map(string, Attribute::string),
+                map(boolean, Attribute::boolean),
+            ),
         ),
     )
 }
 
-pub fn attributes(input: &str) -> Output<Attrs> {
+pub fn attributes(input: &str) -> Output<Attributes> {
     parse(
         input,
         context(
@@ -204,12 +207,12 @@ pub fn attributes(input: &str) -> Output<Attrs> {
                                 leading(optional(sequence::indent), '='),
                                 fail(leading(optional(sequence::indent), attribute)),
                             )),
-                            |attr| attr.unwrap_or_else(|| Attr::boolean(true)),
+                            |attr| attr.unwrap_or_else(|| Attribute::boolean(true)),
                         ),
                     ),
                     (optional(sequence::indent), ',', optional(sequence::indent)),
                 ),
-                Attrs::from,
+                Attributes::from,
             ),
         ),
     )
@@ -233,45 +236,52 @@ mod tests {
         assert_eq!(
             parse(include_str!("../templates/example-001.txt"), document),
             Ok((
-                Node::element(Element::new("html").attr("lang", "en").attr(
-                    "nodes",
-                    vec![
-                        Element::new("head").attr(
-                            "nodes",
-                            vec![
-                                    Element::new("meta").attr("charset", "utf-8"),
-                                    Element::new("title").attr("nodes", Text::new("Example 001")),
+                Node::element(
+                    Element::new("html")
+                        .with_attr("lang", "en")
+                        .with_nodes(vec![
+                            Element::new("head")
+                                .with_nodes(vec![
+                                    Element::new("meta").with_attr("charset", "utf-8").into(),
+                                    Element::new("title")
+                                        .with_node(Text::new("Example 001"))
+                                        .into(),
                                     Element::new("meta")
-                                        .attr("name", "description")
-                                        .attr("content", "Example 001."),
+                                        .with_attr("name", "description")
+                                        .with_attr("content", "Example 001.")
+                                        .into(),
                                     Element::new("meta")
-                                        .attr("name", "author")
-                                        .attr("content", "Me"),
+                                        .with_attr("name", "author")
+                                        .with_attr("content", "Me")
+                                        .into(),
                                     Element::new("link")
-                                        .attr("rel", "stylesheet")
-                                        .attr("href", "/assets/css/style.css"),
-                                    Element::new("script").attr("src", "/assets/js/script.js"),
-                                ]
-                        ),
-                        Element::new("body").attr(
-                            "nodes",
-                            vec![
-                                Element::new("header").attr(
-                                    "nodes",
-                                    Element::new("h1").attr("nodes", Text::new("Example 001"))
-                                ),
-                                Element::new("main").attr(
-                                    "nodes",
-                                    vec![
-                                        Element::new("p")
-                                            .attr("nodes", Text::new("This is example 001.")),
-                                        Element::new("p").attr("nodes", Text::new(lorem)),
-                                    ]
-                                ),
-                            ]
-                        ),
-                    ]
-                ),)
+                                        .with_attr("rel", "stylesheet")
+                                        .with_attr("href", "/assets/css/style.css")
+                                        .into(),
+                                    Element::new("script")
+                                        .with_attr("src", "/assets/js/script.js")
+                                        .into(),
+                                ])
+                                .into(),
+                            Element::new("body")
+                                .with_nodes(vec![
+                                    Element::new("header")
+                                        .with_node(
+                                            Element::new("h1").with_node(Text::new("Example 001"))
+                                        )
+                                        .into(),
+                                    Element::new("main")
+                                        .with_nodes(vec![
+                                            Element::new("p")
+                                                .with_node(Text::new("This is example 001."))
+                                                .into(),
+                                            Element::new("p").with_node(Text::new(lorem)).into(),
+                                        ])
+                                        .into(),
+                                ])
+                                .into(),
+                        ]),
+                )
                 .into(),
                 ""
             )),
@@ -281,23 +291,23 @@ mod tests {
             Ok((
                 Node::element(
                     Element::new("div")
-                        .attr("class", "field field--checkbox")
-                        .attr(
-                            "nodes",
-                            vec![
-                                Element::new("label")
-                                    .attr("for", "my-checkbox")
-                                    .attr("nodes", Text::new("Checkbox")),
-                                Element::new("input")
-                                    .attr("id", "my-checkbox")
-                                    .attr("class", "input input--checkbox")
-                                    .attr("type", "checkbox")
-                                    .attr("checked", true),
-                                Element::new("span")
-                                    .attr("class", "description")
-                                    .attr("nodes", Text::new("Description.")),
-                            ]
-                        ),
+                        .with_attr("class", "field field--checkbox")
+                        .with_nodes(vec![
+                            Element::new("label")
+                                .with_attr("for", "my-checkbox")
+                                .with_node(Text::new("Checkbox"))
+                                .into(),
+                            Element::new("input")
+                                .with_attr("id", "my-checkbox")
+                                .with_attr("class", "input input--checkbox")
+                                .with_attr("type", "checkbox")
+                                .with_attr("checked", true)
+                                .into(),
+                            Element::new("span")
+                                .with_attr("class", "description")
+                                .with_node(Text::new("Description."))
+                                .into(),
+                        ]),
                 )
                 .into(),
                 ""
@@ -431,10 +441,7 @@ mod tests {
             parse("div { span | \"text\" }", node),
             Ok((
                 Element::new("div")
-                    .attr(
-                        "nodes",
-                        Element::new("span").attr("nodes", Text::new("text"))
-                    )
+                    .with_node(Element::new("span").with_node(Text::new("text")))
                     .into(),
                 ""
             ))
@@ -490,10 +497,8 @@ mod tests {
             Ok((
                 vec![
                     Element::new("div"),
-                    Element::new("div").attr(
-                        "nodes",
-                        Element::new("span").attr("nodes", Text::new("text"))
-                    )
+                    Element::new("div")
+                        .with_node(Element::new("span").with_node(Text::new("text")))
                 ]
                 .into(),
                 ""
@@ -630,11 +635,11 @@ mod tests {
         );
         assert_eq!(
             parse("element checked", element),
-            Ok((Element::new("element").attr("checked", true), ""))
+            Ok((Element::new("element").with_attr("checked", true), ""))
         );
         assert_eq!(
             parse("element class = \"custom\"", element),
-            Ok((Element::new("element").attr("class", "custom"), ""))
+            Ok((Element::new("element").with_attr("class", "custom"), ""))
         );
         assert_eq!(
             parse("element$", element),
@@ -742,10 +747,13 @@ mod tests {
         );
         assert_eq!(
             parse("\"hello world\"", attribute),
-            Ok((Attr::string("hello world"), ""))
+            Ok((Attribute::string("hello world"), ""))
         );
-        assert_eq!(parse("true", attribute), Ok((Attr::boolean(true), "")));
-        assert_eq!(parse("false", attribute), Ok((Attr::boolean(false), "")));
+        assert_eq!(parse("true", attribute), Ok((Attribute::boolean(true), "")));
+        assert_eq!(
+            parse("false", attribute),
+            Ok((Attribute::boolean(false), ""))
+        );
     }
 
     #[test]
@@ -754,8 +762,8 @@ mod tests {
             parse("one", attributes),
             Ok((
                 {
-                    let mut attrs = Attrs::new();
-                    attrs.insert("one", true);
+                    let mut attrs = Attributes::new();
+                    attrs.set("one", true);
                     attrs
                 },
                 ""
@@ -765,9 +773,9 @@ mod tests {
             parse("one, two", attributes),
             Ok((
                 {
-                    let mut attrs = Attrs::new();
-                    attrs.insert("one", true);
-                    attrs.insert("two", true);
+                    let mut attrs = Attributes::new();
+                    attrs.set("one", true);
+                    attrs.set("two", true);
                     attrs
                 },
                 ""
@@ -777,8 +785,8 @@ mod tests {
             parse("one = \"two\"", attributes),
             Ok((
                 {
-                    let mut attrs = Attrs::new();
-                    attrs.insert("one", "two");
+                    let mut attrs = Attributes::new();
+                    attrs.set("one", "two");
                     attrs
                 },
                 ""
@@ -798,11 +806,11 @@ mod tests {
             ),
             Ok((
                 {
-                    let mut attrs = Attrs::new();
-                    attrs.insert("one", "hello");
-                    attrs.insert("two", true);
-                    attrs.insert("three", true);
-                    attrs.insert("four", false);
+                    let mut attrs = Attributes::new();
+                    attrs.set("one", "hello");
+                    attrs.set("two", true);
+                    attrs.set("three", true);
+                    attrs.set("four", false);
                     attrs
                 },
                 ""

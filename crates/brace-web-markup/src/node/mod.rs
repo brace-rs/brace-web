@@ -4,6 +4,7 @@ use self::element::Element;
 use self::text::Text;
 use crate::render::{Render, Renderer, Result as RenderResult};
 
+pub mod attribute;
 pub mod element;
 pub mod text;
 
@@ -80,15 +81,27 @@ impl Render for Node {
     }
 }
 
+impl From<&str> for Node {
+    fn from(from: &str) -> Self {
+        Self::text(from)
+    }
+}
+
+impl From<String> for Node {
+    fn from(from: String) -> Self {
+        Self::text(from)
+    }
+}
+
 impl From<Text> for Node {
     fn from(from: Text) -> Self {
-        Self::Text(from)
+        Self::text(from)
     }
 }
 
 impl From<Element> for Node {
     fn from(from: Element) -> Self {
-        Self::Element(from)
+        Self::element(from)
     }
 }
 
@@ -146,11 +159,6 @@ impl Nodes {
         self
     }
 
-    pub fn remove(&mut self, index: usize) -> &mut Self {
-        self.0.remove(index);
-        self
-    }
-
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -165,6 +173,12 @@ impl Nodes {
 
     pub fn iter_mut(&mut self) -> IterMut<'_, Node> {
         self.0.iter_mut()
+    }
+}
+
+impl Extend<Node> for Nodes {
+    fn extend<I: IntoIterator<Item = Node>>(&mut self, iter: I) {
+        self.0.extend(iter)
     }
 }
 
@@ -352,12 +366,9 @@ mod tests {
 
     #[test]
     fn test_node_tree_nested() {
-        let html: Node = Element::with(
-            "html",
-            (),
-            Element::with("body", (), Text::new("hello world")),
-        )
-        .into();
+        let html: Node = Element::new("html")
+            .with_node(Element::new("body").with_node(Text::new("hello world")))
+            .into();
 
         assert_eq!(html.as_element().unwrap().nodes().len(), 1);
 
