@@ -4,8 +4,8 @@ use futures::future::{self, Ready};
 
 use brace_web_core::{HttpRequest, HttpResponse, Responder};
 
-use crate::node::{Node, Nodes};
-use crate::render::{render, Error, Render, Renderer, Result as RenderResult};
+use crate::util::render::{render, Error, Render, Renderer, Result as RenderResult};
+use crate::{Node, Nodes};
 
 pub fn document() -> Document {
     Document::new()
@@ -98,9 +98,7 @@ impl From<Nodes> for Document {
 
 #[cfg(test)]
 mod tests {
-    use crate::node::document::Document;
-    use crate::node::element::Element;
-    use crate::node::text::Text;
+    use crate::{Document, Element, Text};
 
     #[test]
     fn test_document_tree() {
