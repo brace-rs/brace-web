@@ -9,4 +9,6 @@ edition = "2018"
 
 [dependencies]
 brace-parser = { git = "https://github.com/brace-rs/brace-parser", rev = "c85faf303ac83ab5f2c5e529b7d6a559b2456a28" }
+brace-web-core = { path = "../brace-web-core" }
+futures = "0.3"
 indexmap = "1.2"

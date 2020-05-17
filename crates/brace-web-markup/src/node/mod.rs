@@ -1,8 +1,12 @@
 use std::collections::vec_deque::{IntoIter, Iter, IterMut, VecDeque};
 
+use futures::future::{self, Ready};
+
+use brace_web_core::{HttpRequest, HttpResponse, Responder};
+
 use self::element::Element;
 use self::text::Text;
-use crate::render::{Render, Renderer, Result as RenderResult};
+use crate::render::{render, Error, Render, Renderer, Result as RenderResult};
 
 pub mod attribute;
 pub mod element;
@@ -77,6 +81,22 @@ impl Render for Node {
         match self {
             Self::Text(text) => text.render(renderer),
             Self::Element(element) => element.render(renderer),
+        }
+    }
+}
+
+impl Responder for Node {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Self::Error>>;
+
+    fn respond_to(self, _: &HttpRequest) -> Self::Future {
+        match render(self) {
+            Ok(body) => future::ok(
+                HttpResponse::Ok()
+                    .content_type("text/html; charset=utf-8")
+                    .body(body),
+            ),
+            Err(err) => future::err(err),
         }
     }
 }
@@ -188,6 +208,32 @@ impl IntoIterator for Nodes {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl Render for Nodes {
+    fn render(&self, renderer: &mut Renderer) -> RenderResult {
+        for node in &self.0 {
+            node.render(renderer)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Responder for Nodes {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Self::Error>>;
+
+    fn respond_to(self, _: &HttpRequest) -> Self::Future {
+        match render(self) {
+            Ok(body) => future::ok(
+                HttpResponse::Ok()
+                    .content_type("text/html; charset=utf-8")
+                    .body(body),
+            ),
+            Err(err) => future::err(err),
+        }
     }
 }
 
