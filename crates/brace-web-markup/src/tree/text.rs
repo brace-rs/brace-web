@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use crate::render::{Render, Renderer, Result as RenderResult};
+use crate::util::render::{Render, Renderer, Result as RenderResult};
 
 pub fn text<T>(text: T) -> Text
 where

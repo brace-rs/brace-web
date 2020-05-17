@@ -4,14 +4,8 @@ use futures::future::{self, Ready};
 
 use brace_web_core::{HttpRequest, HttpResponse, Responder};
 
-use self::element::Element;
-use self::text::Text;
-use crate::render::{render, Error, Render, Renderer, Result as RenderResult};
-
-pub mod attribute;
-pub mod document;
-pub mod element;
-pub mod text;
+use crate::util::render::{render, Error, Render, Renderer, Result as RenderResult};
+use crate::{Element, Text};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Node {

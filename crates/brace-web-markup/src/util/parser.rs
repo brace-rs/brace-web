@@ -1,10 +1,6 @@
 use brace_parser::prelude::*;
 
-use crate::node::attribute::{Attribute, Attributes};
-use crate::node::document::Document;
-use crate::node::element::Element;
-use crate::node::text::Text;
-use crate::node::{Node, Nodes};
+use crate::{Attribute, Attributes, Document, Element, Node, Nodes, Text};
 
 pub fn document(input: &str) -> Output<Document> {
     parse(
@@ -238,7 +234,7 @@ mod tests {
                 eleifend dolor. Sed sodales porta ligula, vitae volutpat nulla."#;
 
         assert_eq!(
-            parse(include_str!("../templates/example-001.txt"), document),
+            parse(include_str!("../../templates/example-001.txt"), document),
             Ok((
                 Node::element(
                     Element::new("html")
@@ -291,7 +287,7 @@ mod tests {
             )),
         );
         assert_eq!(
-            parse(include_str!("../templates/example-002.txt"), document),
+            parse(include_str!("../../templates/example-002.txt"), document),
             Ok((
                 Node::element(
                     Element::new("div")
