@@ -1,19 +1,23 @@
 use brace_parser::prelude::*;
 
 use crate::node::attribute::{Attribute, Attributes};
+use crate::node::document::Document;
 use crate::node::element::Element;
 use crate::node::text::Text;
 use crate::node::{Node, Nodes};
 
-pub fn document(input: &str) -> Output<Nodes> {
+pub fn document(input: &str) -> Output<Document> {
     parse(
         input,
         context(
             "document",
-            delimited(
-                optional(sequence::whitespace),
-                map(optional(nodes), Option::unwrap_or_default),
-                optional(sequence::whitespace),
+            map(
+                delimited(
+                    optional(sequence::whitespace),
+                    map(optional(nodes), Option::unwrap_or_default),
+                    optional(sequence::whitespace),
+                ),
+                Document::from,
             ),
         ),
     )

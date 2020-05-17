@@ -9,6 +9,7 @@ use self::text::Text;
 use crate::render::{render, Error, Render, Renderer, Result as RenderResult};
 
 pub mod attribute;
+pub mod document;
 pub mod element;
 pub mod text;
 
