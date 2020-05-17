@@ -1,9 +1,13 @@
 use std::fmt::Write;
 use std::ops::{Index, IndexMut};
 
+use futures::future::{self, Ready};
+
+use brace_web_core::{HttpRequest, HttpResponse, Responder};
+
 use crate::node::attribute::{Attribute, Attributes};
 use crate::node::{Node, Nodes};
-use crate::render::{Render, Renderer, Result as RenderResult};
+use crate::render::{render, Error, Render, Renderer, Result as RenderResult};
 
 pub fn element<T>(tag: T) -> Element
 where
@@ -157,6 +161,22 @@ impl Render for Element {
         }
 
         Ok(())
+    }
+}
+
+impl Responder for Element {
+    type Error = Error;
+    type Future = Ready<Result<HttpResponse, Self::Error>>;
+
+    fn respond_to(self, _: &HttpRequest) -> Self::Future {
+        match render(self) {
+            Ok(body) => future::ok(
+                HttpResponse::Ok()
+                    .content_type("text/html; charset=utf-8")
+                    .body(body),
+            ),
+            Err(err) => future::err(err),
+        }
     }
 }
 

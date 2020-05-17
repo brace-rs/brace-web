@@ -2,6 +2,9 @@ use std::error::Error as StdError;
 use std::fmt::{Display, Error as FmtError, Formatter, Result as FmtResult, Write};
 use std::result::Result as StdResult;
 
+use brace_web_core::dev::HttpResponseBuilder;
+use brace_web_core::{HttpResponse, ResponseError};
+
 pub type Result = StdResult<(), Error>;
 
 pub fn render<T>(item: T) -> StdResult<String, Error>
@@ -60,6 +63,14 @@ impl Display for Error {
 }
 
 impl StdError for Error {}
+
+impl ResponseError for Error {
+    fn error_response(&self) -> HttpResponse {
+        HttpResponseBuilder::new(self.status_code())
+            .content_type("text/html; charset=utf-8")
+            .body(self.to_string())
+    }
+}
 
 impl From<FmtError> for Error {
     fn from(from: FmtError) -> Self {
