@@ -7,7 +7,7 @@ use brace_web_core::{HttpResponse, ResponseError};
 
 pub type Result = StdResult<(), Error>;
 
-pub fn render<T>(item: T) -> StdResult<String, Error>
+pub fn render<T>(item: &T) -> StdResult<String, Error>
 where
     T: Render,
 {
@@ -33,7 +33,7 @@ impl<'a> Renderer<'a> {
         Self(buffer)
     }
 
-    pub fn render<T>(&mut self, item: T) -> Result
+    pub fn render<T>(&mut self, item: &T) -> Result
     where
         T: Render,
     {
@@ -87,7 +87,7 @@ mod tests {
     fn test_render_node() {
         let node_1 = Node::element("html");
 
-        assert_eq!(render(node_1).unwrap(), "<html></html>");
+        assert_eq!(render(&node_1).unwrap(), "<html></html>");
 
         let mut node_2 = Node::element("html");
 
@@ -108,7 +108,7 @@ mod tests {
             .append(Node::element(Element::new("body").with_node("hello world")));
 
         assert_eq!(
-            render(node_2).unwrap(),
+            render(&node_2).unwrap(),
             "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>Hello world</title><meta charset=\"utf-8\" /></head><body>hello world</body></html>"
         );
 
@@ -123,7 +123,7 @@ mod tests {
             .set("c", "3");
 
         assert_eq!(
-            render(node_3).unwrap(),
+            render(&node_3).unwrap(),
             "<div b=\"1\" a=\"2\" c=\"3\"></div>"
         );
 
@@ -138,7 +138,7 @@ mod tests {
             .set("disabled", false);
 
         assert_eq!(
-            render(node_4).unwrap(),
+            render(&node_4).unwrap(),
             "<input type=\"checkbox\" checked />"
         );
     }
