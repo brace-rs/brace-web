@@ -74,7 +74,7 @@ impl Responder for Document {
     type Future = Ready<Result<HttpResponse, Self::Error>>;
 
     fn respond_to(self, _: &HttpRequest) -> Self::Future {
-        match render(self) {
+        match render(&self) {
             Ok(body) => future::ok(
                 HttpResponse::Ok()
                     .content_type("text/html; charset=utf-8")
