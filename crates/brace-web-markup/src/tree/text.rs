@@ -1,12 +1,16 @@
-use std::fmt::Write;
+use std::fmt::{self, Display, Write};
 
+use once_cell::sync::Lazy;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::util::render::{Render, Renderer, Result as RenderResult};
 
+static REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").unwrap());
+
 pub fn text<T>(text: T) -> Text
 where
-    T: Into<String>,
+    T: AsRef<str>,
 {
     Text::new(text)
 }
@@ -18,9 +22,9 @@ pub struct Text(String);
 impl Text {
     pub fn new<T>(text: T) -> Self
     where
-        T: Into<String>,
+        T: AsRef<str>,
     {
-        Self(text.into())
+        Self(REGEX.replace_all(text.as_ref(), " ").trim().to_string())
     }
 
     pub fn value(&self) -> &str {
@@ -38,14 +42,38 @@ impl Render for Text {
     }
 }
 
+impl Display for Text {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
+
 impl From<&str> for Text {
     fn from(from: &str) -> Self {
-        Self(from.to_owned())
+        Self::new(from)
     }
 }
 
 impl From<String> for Text {
     fn from(from: String) -> Self {
-        Self(from)
+        Self::new(from)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Text;
+
+    #[test]
+    fn test_whitespace() {
+        let a = Text::new("hello world");
+        let b = Text::new("hello  world");
+        let c = Text::new("hello   world");
+        let d = Text::new("\n hello  \n  world \n");
+
+        assert_eq!(a.0, "hello world");
+        assert_eq!(b.0, "hello world");
+        assert_eq!(c.0, "hello world");
+        assert_eq!(d.0, "hello world");
     }
 }
