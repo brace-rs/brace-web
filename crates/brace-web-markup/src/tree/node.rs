@@ -146,7 +146,7 @@ impl Nodes {
 
         if let Node::Text(text) = &node {
             if let Some(item) = self.0.back_mut().and_then(|item| item.as_text_mut()) {
-                item.value_mut().push_str(text.value());
+                item.value_mut().push_str(&format!(" {}", text.value()));
 
                 return self;
             }
@@ -164,7 +164,7 @@ impl Nodes {
 
         if let Node::Text(text) = &mut node {
             if let Some(item) = self.0.front_mut().and_then(|item| item.as_text_mut()) {
-                text.value_mut().push_str(item.value());
+                text.value_mut().push_str(&format!(" {}", item.value()));
 
                 *item.value_mut() = text.value().to_string();
 
@@ -278,7 +278,13 @@ impl From<Text> for Nodes {
 
 impl From<Vec<Text>> for Nodes {
     fn from(from: Vec<Text>) -> Self {
-        Self(from.into_iter().map(Node::from).collect())
+        let mut nodes = Self::new();
+
+        for node in from {
+            nodes.append(node);
+        }
+
+        nodes
     }
 }
 
@@ -302,13 +308,25 @@ impl From<Node> for Nodes {
 
 impl From<&[Node]> for Nodes {
     fn from(from: &[Node]) -> Self {
-        Self(from.to_vec().into())
+        let mut nodes = Self::new();
+
+        for node in from.to_vec() {
+            nodes.append(node);
+        }
+
+        nodes
     }
 }
 
 impl From<Vec<Node>> for Nodes {
     fn from(from: Vec<Node>) -> Self {
-        Self(from.into())
+        let mut nodes = Self::new();
+
+        for node in from {
+            nodes.append(node);
+        }
+
+        nodes
     }
 }
 
@@ -434,7 +452,7 @@ mod tests {
         assert_eq!(element_1.nodes().len(), 1);
         assert_eq!(
             element_1.nodes().get(0).unwrap().as_text().unwrap().value(),
-            "onetwo"
+            "one two"
         );
 
         let mut element_2 = Element::new("span");
@@ -445,7 +463,7 @@ mod tests {
         assert_eq!(element_2.nodes().len(), 1);
         assert_eq!(
             element_2.nodes().get(0).unwrap().as_text().unwrap().value(),
-            "twoone"
+            "two one"
         );
     }
 }
