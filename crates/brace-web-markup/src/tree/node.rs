@@ -1,13 +1,15 @@
 use std::collections::vec_deque::{IntoIter, Iter, IterMut, VecDeque};
 
 use futures::future::{self, Ready};
+use serde::{Deserialize, Serialize};
 
 use brace_web_core::{HttpRequest, HttpResponse, Responder};
 
 use crate::util::render::{render, Error, Render, Renderer, Result as RenderResult};
 use crate::{Element, Text};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(untagged)]
 pub enum Node {
     Text(Text),
     Element(Element),
@@ -120,7 +122,7 @@ impl From<Element> for Node {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct Nodes(VecDeque<Node>);
 
 impl Nodes {

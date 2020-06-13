@@ -2,6 +2,7 @@ use std::fmt::Write;
 use std::ops::{Index, IndexMut};
 
 use futures::future::{self, Ready};
+use serde::{Deserialize, Serialize};
 
 use brace_web_core::{HttpRequest, HttpResponse, Responder};
 
@@ -18,7 +19,7 @@ where
     Element::new(tag)
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Element {
     tag: String,
     attrs: Attributes,
