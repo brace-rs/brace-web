@@ -1,0 +1,27 @@
+{
+  "nodes": [
+    {
+      "tag": "html",
+      "attrs": {},
+      "nodes": [
+        {
+          "tag": "body",
+          "attrs": {
+            "greeting": true,
+            "message": "Hello world"
+          },
+          "nodes": [
+            "Hello",
+            {
+              "tag": "em",
+              "attrs": {},
+              "nodes": [
+                "world"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

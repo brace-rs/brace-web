@@ -1,5 +1,7 @@
 use std::fmt::Write;
 
+use serde::{Deserialize, Serialize};
+
 use crate::util::render::{Render, Renderer, Result as RenderResult};
 
 pub fn text<T>(text: T) -> Text
@@ -9,7 +11,8 @@ where
     Text::new(text)
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(transparent)]
 pub struct Text(String);
 
 impl Text {

@@ -1,6 +1,7 @@
 use std::fmt::Write;
 
 use futures::future::{self, Ready};
+use serde::{Deserialize, Serialize};
 
 use brace_web_core::{HttpRequest, HttpResponse, Responder};
 
@@ -11,7 +12,7 @@ pub fn document() -> Document {
     Document::new()
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct Document {
     nodes: Nodes,
 }

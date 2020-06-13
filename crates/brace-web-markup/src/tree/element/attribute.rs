@@ -1,6 +1,8 @@
 use indexmap::map::{Entry, IndexMap, IntoIter, Iter, IterMut};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(untagged)]
 pub enum Attribute {
     String(String),
     Boolean(bool),
@@ -100,7 +102,8 @@ impl From<bool> for Attribute {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+#[serde(transparent)]
 pub struct Attributes(IndexMap<String, Attribute>);
 
 impl Attributes {

@@ -11,4 +11,8 @@ edition = "2018"
 brace-parser = { git = "https://github.com/brace-rs/brace-parser", rev = "c85faf303ac83ab5f2c5e529b7d6a559b2456a28" }
 brace-web-core = { path = "../brace-web-core" }
 futures = "0.3"
-indexmap = "1.2"
+indexmap = { version = "1.2", features = ["serde-1"] }
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = { version = "1.0", features = ["preserve_order"] }
